@@ -39,6 +39,7 @@ contract LoanProtector is TokenSender, TokenReceiver {
     address private immutable hyperlaneMailboxAddress;
 
     address private immutable usdcAddress;
+    address private immutable cctpAddress;
     uint32 private immutable cctpChainId;
 
     // Mappings
@@ -226,6 +227,8 @@ contract LoanProtector is TokenSender, TokenReceiver {
     ) internal {
         // Bridge using wormhole or cctp
         if (tokenAddress == usdcAddress && destinationChain == cctpChainId) {
+            IERC20(tokenAddress).approve(cctpAddress, tokenAmount);
+
             // Call CCTP to bridge the USDC
         } else {
             // Call Wormhole to bridge the asset
@@ -255,14 +258,10 @@ contract LoanProtector is TokenSender, TokenReceiver {
         // Call Aave to repay or supply the asset
         if (repay) {
             // Call Aave to repay the asset
-            AavePool(aavePoolAddress).repay(
-                receivedTokens[0].tokenAddress, receivedTokens[0].amount, 2, address(this)
-            );
+            AavePool(aavePoolAddress).repay(receivedTokens[0].tokenAddress, receivedTokens[0].amount, 2, address(this));
         } else {
             // Call Aave to supply the asset
-            AavePool(aavePoolAddress).supply(
-                receivedTokens[0].tokenAddress, receivedTokens[0].amount, address(this), 0
-            );
+            AavePool(aavePoolAddress).supply(receivedTokens[0].tokenAddress, receivedTokens[0].amount, address(this), 0);
         }
     }
 
