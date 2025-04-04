@@ -6,7 +6,20 @@ import {Vault} from "./Vault.sol";
 contract VaultFactory {
     event VaultCreated(address indexed vaultAddress, address indexed owner);
 
+    address public immutable owner;
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not the contract owner");
+        _;
+    }
+
     mapping(address => address) public vaults;
+
+    mapping(uint32 => uint16) public worldChainId;
 
     function createVault() external returns (address) {
         if (vaults[msg.sender] != address(0)) {
@@ -22,6 +35,15 @@ contract VaultFactory {
 
         return address(vault);
     }
+
+    function setWorldChainId(uint32 _chainId, uint16 _worldChainId) external onlyOwner {
+        worldChainId[_chainId] = _worldChainId;
+    }
+
+    function getWorldChainId(uint32 _chainId) external view returns (uint16) {
+        return worldChainId[_chainId];
+    }
+
 
     function getVaultAddress(address _owner) external view returns (address) {
         return vaults[_owner];
