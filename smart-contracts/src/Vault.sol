@@ -6,6 +6,8 @@ import "lib/wormhole-solidity-sdk/src/WormholeRelayerSDK.sol";
 
 import {AavePool} from "./interfaces/IAavePool.sol";
 import {IHyperlaneMailbox} from "./interfaces/IHyperlane.sol";
+import {IFactory} from "./interfaces/IFactory.sol";
+
 
 // Protocols To Be Integrated
 // 1. Aave (Condition Check done and asset supply/replay should work)
@@ -32,6 +34,7 @@ contract Vault is TokenSender, TokenReceiver {
 
     // State variables
     address public immutable owner;
+    address public immutable factoryAddress;
 
     // External Protocol Configurations
     address private immutable aavePoolAddress;
@@ -256,11 +259,13 @@ contract Vault is TokenSender, TokenReceiver {
 
         } else {
             // Call Wormhole to bridge the asset
-            uint256 cost = quoteCrossChainDeposit(uint16(destinationChain));
+            uint16 wormholeChainId = IFactory(owner).getWorldChainId(destinationChain);
+
+            uint256 cost = quoteCrossChainDeposit(wormholeChainId);
             require(address(this).balance >= cost, "Insufficient funds for cross-chain deposit");
             bytes memory payload = abi.encode(repay);
 
-            sendTokenWithPayloadToEvm(uint16(destinationChain), reciever, payload, 0, GAS_LIMIT, token, tokenAmount);
+            sendTokenWithPayloadToEvm(wormholeChainId, reciever, payload, 0, GAS_LIMIT, token, tokenAmount);
         }
     }
 
