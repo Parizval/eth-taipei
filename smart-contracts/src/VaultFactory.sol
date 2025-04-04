@@ -13,7 +13,8 @@ contract VaultFactory {
             revert("Vault already exists");
         }
 
-        Vault vault = new Vault(msg.sender, msg.sender, msg.sender);
+        Vault vault = new Vault(msg.sender, msg.sender, msg.sender, msg.sender, msg.sender, msg.sender, msg.sender, msg.sender, 8);
+      
 
         vaults[msg.sender] = address(vault);
 

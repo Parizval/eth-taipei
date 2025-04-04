@@ -13,7 +13,7 @@ contract VaultScript is Script {
         // Set up the environment
         vm.startBroadcast();
 
-        vault = new Vault(address(0), address(0), address(0));
+        vault = new Vault(address(0), address(0), address(0), address(0), address(0), address(0), address(0), address(0), 8);
 
         vm.stopBroadcast();
     }

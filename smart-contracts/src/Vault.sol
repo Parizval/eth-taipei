@@ -39,7 +39,7 @@ contract Vault is TokenSender, TokenReceiver {
     address private immutable hyperlaneMailboxAddress;
 
     address private immutable usdcAddress;
-    address private immutable cctpAddress;
+    address private immutable tokenMessenger;
     uint32 private immutable cctpChainId;
 
     // Mappings
@@ -51,9 +51,17 @@ contract Vault is TokenSender, TokenReceiver {
 
     // Events
 
-    constructor(address _wormholeRelayer, address _tokenBridge, address _wormhole)
+    constructor(address _owner, address _aavePoolAddress, address _hyperlaneMailboxAddress, address _usdcAddress, address _tokenMessenger,  address _wormholeRelayer, address _tokenBridge, address _wormhole, uint32 _cctpChainId)
         TokenBase(_wormholeRelayer, _tokenBridge, _wormhole)
-    {}
+    {
+        owner = _owner;
+        aavePoolAddress = _aavePoolAddress;
+        hyperlaneMailboxAddress = _hyperlaneMailboxAddress;
+
+        usdcAddress = _usdcAddress;
+        tokenMessenger = _tokenMessenger;
+        cctpChainId = _cctpChainId;
+    }
 
     modifier OnlyOwner() {
         require(msg.sender == owner, "Only the owner can call this function");
@@ -228,7 +236,7 @@ contract Vault is TokenSender, TokenReceiver {
     {
         // Bridge using wormhole or cctp
         if (token == usdcAddress && destinationChain == cctpChainId) {
-            IERC20(token).approve(cctpAddress, tokenAmount);
+            IERC20(token).approve(tokenMessenger, tokenAmount);
 
             // Call CCTP to bridge the USDC
         } else {
