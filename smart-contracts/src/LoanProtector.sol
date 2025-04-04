@@ -33,7 +33,14 @@ struct OrderExecutionDetails{
 contract LoanProtector {
 
     // State variables
-    address public owner;
+    address public immutable owner;
+
+
+    // Configuration 
+    address private immutable usdcAddress;
+    uint32 private immutable cctpChainId;
+
+    address private immutable aavePoolAddress;
 
 
     // Mappings 
@@ -177,16 +184,34 @@ contract LoanProtector {
     function sameChainOrderExecution(
         bytes32 orderId
     ) internal {
+        OrderExecutionDetails memory orderExecution = orderExecutionDetails[orderId];
+
+        // Destructure the token based on the asset type
 
 
+
+        // Approve call may change based on the asset type
+        IERC20(orderExecution.tokenAddress).approve(aavePoolAddress, orderExecution.tokenAmount);
+
+        // Call Aave to repay or supply the asset
+        if (orderExecution.repay){
+            // Call Aave to repay the asset
+        }else{
+            // Call Aave to supply the asset
+        }
         
-
-        // Execute the order on the same chain
-        // Call Aave to execute the order
-
         // Delete the order and order execution details from the mappings
         delete orders[orderId];
     }
+
+    function sendMessageToDestinationChain(
+        uint32 destinationChainId,
+        bytes32 orderId
+    ) internal {
+        // Call Hyperlane to send the message to the destination chain
+    }
+
+
 
 
 
