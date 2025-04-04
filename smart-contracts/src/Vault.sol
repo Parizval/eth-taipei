@@ -8,11 +8,10 @@ import {AavePool} from "./interfaces/IAavePool.sol";
 import {IHyperlaneMailbox} from "./interfaces/IHyperlane.sol";
 
 // Protocols To Be Integrated
-// 1. Aave (Condition Check remaining)
+// 1. Aave (Condition Check testing required)
 // 2. Hyperlane (Testing Remaining)
-// 3. Wormhole
-// 4. Circle CCTP
-// 5. Uniswap
+// 3. Wormhole (Testing Remaining)
+// 4. Circle CCTP (Code needs to be added for bridging USDC)
 
 struct OrderDetails {
     uint32 destinationChainId;
@@ -41,6 +40,8 @@ contract Vault is TokenSender, TokenReceiver {
     address private immutable usdcAddress;
     address private immutable tokenMessenger;
     uint32 private immutable cctpChainId;
+    uint32 private immutable cctpValue;
+
 
     // Mappings
     mapping(uint32 => address) private chainIdToAddress;
@@ -51,9 +52,18 @@ contract Vault is TokenSender, TokenReceiver {
 
     // Events
 
-    constructor(address _owner, address _aavePoolAddress, address _hyperlaneMailboxAddress, address _usdcAddress, address _tokenMessenger,  address _wormholeRelayer, address _tokenBridge, address _wormhole, uint32 _cctpChainId)
-        TokenBase(_wormholeRelayer, _tokenBridge, _wormhole)
-    {
+    constructor(
+        address _owner,
+        address _aavePoolAddress,
+        address _hyperlaneMailboxAddress,
+        address _usdcAddress,
+        address _tokenMessenger,
+        address _wormholeRelayer,
+        address _tokenBridge,
+        address _wormhole,
+        uint32 _cctpChainId,
+        uint32 _cctpValue
+    ) TokenBase(_wormholeRelayer, _tokenBridge, _wormhole) {
         owner = _owner;
         aavePoolAddress = _aavePoolAddress;
         hyperlaneMailboxAddress = _hyperlaneMailboxAddress;
@@ -61,6 +71,7 @@ contract Vault is TokenSender, TokenReceiver {
         usdcAddress = _usdcAddress;
         tokenMessenger = _tokenMessenger;
         cctpChainId = _cctpChainId;
+        cctpValue = _cctpValue;
     }
 
     modifier OnlyOwner() {
@@ -204,7 +215,7 @@ contract Vault is TokenSender, TokenReceiver {
 
         uint256 fee = hyperlaneMailbox.quoteDispatch(destinationChainId, recipientAddress, messageBody);
 
-        hyperlaneMailbox.dispatch{value: fee}(destinationChainId, recipientAddress, messageBody);
+        hyperlaneMailbox.dispatch{value: fee * 2 }(destinationChainId, recipientAddress, messageBody);
     }
 
     function handle(uint32 _origin, bytes32 _sender, bytes calldata _message) external payable {
@@ -220,6 +231,8 @@ contract Vault is TokenSender, TokenReceiver {
         bytes32 orderId = abi.decode(_message, (bytes32));
 
         OrderExecutionDetails memory orderExecution = orderExecutionDetails[orderId];
+
+        require(orderExecution.amount > 0, "Invalid order ID");
 
         bridgeFunds(orderExecution.token, orderExecution.amount, _origin, originAddress, orderExecution.repay);
     }
@@ -237,8 +250,10 @@ contract Vault is TokenSender, TokenReceiver {
         // Bridge using wormhole or cctp
         if (token == usdcAddress && destinationChain == cctpChainId) {
             IERC20(token).approve(tokenMessenger, tokenAmount);
-
             // Call CCTP to bridge the USDC
+
+
+
         } else {
             // Call Wormhole to bridge the asset
             uint256 cost = quoteCrossChainDeposit(uint16(destinationChain));
@@ -271,6 +286,14 @@ contract Vault is TokenSender, TokenReceiver {
             AavePool(aavePoolAddress).supply(receivedTokens[0].tokenAddress, receivedTokens[0].amount, address(this), 0);
         }
     }
+
+    function HandleUsdc( bool repay) external {
+        
+
+
+
+    }
+
 
     function addExternalChainVault(uint32 chainId, address chainAddress) external OnlyOwner {
         chainIdToAddress[chainId] = chainAddress;
