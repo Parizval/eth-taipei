@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 
 import {AavePool} from "./interfaces/IAavePool.sol";
-
+import {IHyperlaneMailbox} from "./interfaces/IHyperlane.sol";
 
 // Protocols To Be Integrated
 // 1. Aave
@@ -31,8 +31,6 @@ struct OrderExecutionDetails{
 
 
 
-
-
 contract LoanProtector {
 
     // State variables
@@ -44,6 +42,8 @@ contract LoanProtector {
     uint32 private immutable cctpChainId;
 
     address private immutable aavePoolAddress;
+    address private immutable hyperlaneMailboxAddress;
+
 
 
     // Mappings 
@@ -183,6 +183,22 @@ contract LoanProtector {
         IERC20(order.tipTokenAdress).transfer(msg.sender, order.tipAmount);
     }
 
+    function sendMessageToDestinationChain(
+        uint32 destinationChainId,
+        bytes32 orderId
+    ) internal {
+        // Call Hyperlane to send the message to the destination chain
+        IHyperlaneMailbox hyperlaneMailbox = IHyperlaneMailbox(hyperlaneMailboxAddress);
+        bytes32 recipientAddress = addressToBytes32(chainIdToAddress[destinationChainId]);
+
+        bytes memory messageBody = abi.encode(orderId);
+
+        uint256 fee = hyperlaneMailbox.quoteDispatch(destinationChainId, recipientAddress, messageBody);
+
+        hyperlaneMailbox.dispatch{value: fee}(destinationChainId, recipientAddress, messageBody);
+
+    }
+
 
     function sameChainOrderExecution(
         bytes32 orderId
@@ -220,12 +236,7 @@ contract LoanProtector {
         delete orders[orderId];
     }
 
-    function sendMessageToDestinationChain(
-        uint32 destinationChainId,
-        bytes32 orderId
-    ) internal {
-        // Call Hyperlane to send the message to the destination chain
-    }
+    
 
 
 
@@ -252,6 +263,10 @@ contract LoanProtector {
         uint256 conditionAmount
     ) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(conditionAddress, conditionId, conditionAmount));
+    }
+
+    function addressToBytes32(address _addr) internal pure returns (bytes32) {
+        return bytes32(uint256(uint160(_addr)));
     }
 
 
