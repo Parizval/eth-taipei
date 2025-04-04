@@ -22,7 +22,7 @@ struct OrderDetails{
 struct OrderExecutionDetails{
     address tokenAddress;
     uint256 tokenAmount;
-    uint8 assetType;
+    uint16 assetType;
     bool repay; 
 }
 
@@ -42,11 +42,16 @@ contract LoanProtector {
     mapping(bytes32 => OrderExecutionDetails) public orderExecutionDetails;
 
 
+ 
+
+    modifier OnlyOwner() {
+        require(msg.sender == owner, "Only the owner can call this function");
+        _;
+    }
+
     receive() external payable {
         // Function to receive Ether. msg.data must be empty
     }
- 
-
 
     function createOrder(
         address conditionAddress,
@@ -86,12 +91,25 @@ contract LoanProtector {
         return orderId;
     }
 
+    function cancelOrder(
+        bytes32 orderId
+    ) external OnlyOwner {
+        // Ensure the order ID is valid
+        require(orders[orderId].tipAmount > 0, "Invalid order ID");
+
+        // Transfer the tip amount back to the sender
+        IERC20(orders[orderId].tipTokenAdress).transfer(msg.sender, orders[orderId].tipAmount);
+
+        // Delete the order from the mapping
+        delete orders[orderId];
+    }
+
 
     function depositAsset(
         bytes32 orderId,
         address tokenAddress,
         uint256 tokenAmount,
-        uint8 assetType,
+        uint16 assetType,
         bool repay
     ) external OnlyOwner {
         // Ensure the order ID is valid
@@ -114,6 +132,21 @@ contract LoanProtector {
 
     }
 
+    function cancelAssetDeposit(
+        bytes32 orderId
+    ) external OnlyOwner {
+        // Ensure the order ID is valid
+        require(orderExecutionDetails[orderId].tokenAmount > 0, "Invalid order ID");
+
+        // Transfer the asset amount back to the sender
+        IERC20(orderExecutionDetails[orderId].tokenAddress).transfer(msg.sender, orderExecutionDetails[orderId].tokenAmount);
+
+        // Delete the order execution details from the mapping
+        delete orderExecutionDetails[orderId];
+    }
+
+
+
     function addChainId(uint32 chainId, address chainAddress) external OnlyOwner {
         chainIdToAddress[chainId] = chainAddress;
     }
@@ -133,12 +166,6 @@ contract LoanProtector {
         uint256 conditionAmount
     ) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(conditionAddress, conditionId, conditionAmount));
-    }
-
-
-    modifier OnlyOwner() {
-        require(msg.sender == owner, "Not the contract owner");
-        _;
     }
 
 
