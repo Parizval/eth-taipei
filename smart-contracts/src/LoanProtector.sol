@@ -14,12 +14,18 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 struct OrderDetails{
     uint32 destinationChainId;
 
-
-
     // Order Tip Details 
     address tipTokenAdress;
     uint256 tipAmount;
 }
+
+struct OrderExecutionDetails{
+    address tokenAddress;
+    uint256 tokenAmount;
+    uint8 assetType;
+    bool repay; 
+}
+
 
 
 
@@ -33,6 +39,7 @@ contract LoanProtector {
 
     mapping(bytes32 => OrderDetails) public orders; 
 
+    mapping(bytes32 => OrderExecutionDetails) public orderExecutionDetails;
 
 
     receive() external payable {
@@ -49,7 +56,7 @@ contract LoanProtector {
         uint32 destinationChainId,
         address tipTokenAdress,
         uint256 tipAmount
-    ) external OnlyOwner{
+    ) external OnlyOwner returns (bytes32) {
 
 
         // Ensure the condition amount is greater than zero
@@ -76,8 +83,36 @@ contract LoanProtector {
         // Transfer the tip amount from the sender to the contract
         IERC20(tipTokenAdress).transferFrom(msg.sender, address(this), tipAmount);
 
+        return orderId;
     }
 
+
+    function depositAsset(
+        bytes32 orderId,
+        address tokenAddress,
+        uint256 tokenAmount,
+        uint8 assetType,
+        bool repay
+    ) external OnlyOwner {
+        // Ensure the order ID is valid
+        require(orders[orderId].tipAmount > 0, "Invalid order ID");
+
+        // Create the order execution details
+        OrderExecutionDetails memory newOrderExecution = OrderExecutionDetails({
+            tokenAddress: tokenAddress,
+            tokenAmount: tokenAmount,
+            assetType: assetType,
+            repay: repay
+        });
+
+        // Store the order execution details in the mapping
+        orderExecutionDetails[orderId] = newOrderExecution;
+
+
+        // Transfer the asset from the sender to the contract
+        IERC20(tokenAddress).transferFrom(msg.sender, address(this), tokenAmount);
+
+    }
 
     function addChainId(uint32 chainId, address chainAddress) external OnlyOwner {
         chainIdToAddress[chainId] = chainAddress;
