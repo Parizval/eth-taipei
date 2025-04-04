@@ -28,7 +28,7 @@ struct OrderExecutionDetails {
     bool repay;
 }
 
-contract LoanProtector is TokenSender, TokenReceiver {
+contract Vault is TokenSender, TokenReceiver {
     uint256 constant GAS_LIMIT = 250_000;
 
     // State variables

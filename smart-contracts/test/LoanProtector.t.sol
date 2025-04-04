@@ -2,12 +2,12 @@
 pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
-import {LoanProtector} from "../src/LoanProtector.sol";
+import {Vault} from "../src/Vault.sol";
 
-contract LoanProtectorTest is Test {
-    LoanProtector public loanProtector;
+contract VaultTest is Test {
+    Vault public vault;
 
     function setUp() public {
-        loanProtector = new LoanProtector(address(0), address(0), address(0));
+        vault = new Vault(address(0), address(0), address(0));
     }
 }

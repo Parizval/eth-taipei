@@ -2,10 +2,10 @@
 pragma solidity ^0.8.13;
 
 import {Script, console} from "forge-std/Script.sol";
-import {LoanProtector} from "../src/LoanProtector.sol";
+import {Vault} from "../src/Vault.sol";
 
-contract LoanProtectorScript is Script {
-    LoanProtector public loanProtector;
+contract VaultScript is Script {
+    Vault public vault;
 
     function setUp() public {}
 
@@ -13,7 +13,7 @@ contract LoanProtectorScript is Script {
         // Set up the environment
         vm.startBroadcast();
 
-        loanProtector = new LoanProtector(address(0), address(0), address(0));
+        vault = new Vault(address(0), address(0), address(0));
 
         vm.stopBroadcast();
     }
