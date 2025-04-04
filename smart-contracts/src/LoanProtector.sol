@@ -2,13 +2,14 @@
 pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "lib/wormhole-solidity-sdk/src/WormholeRelayerSDK.sol";
 
 import {AavePool} from "./interfaces/IAavePool.sol";
 import {IHyperlaneMailbox} from "./interfaces/IHyperlane.sol";
 
 // Protocols To Be Integrated
-// 1. Aave
-// 2. Hyperlane
+// 1. Aave (Condition Check remaining)
+// 2. Hyperlane (Testing Remaining)
 // 3. Wormhole
 // 4. Circle CCTP
 // 5. Uniswap
@@ -27,16 +28,18 @@ struct OrderExecutionDetails {
     bool repay;
 }
 
-contract LoanProtector {
+contract LoanProtector is TokenSender, TokenReceiver {
+    uint256 constant GAS_LIMIT = 250_000;
+
     // State variables
     address public immutable owner;
 
-    // Configuration
-    address private immutable usdcAddress;
-    uint32 private immutable cctpChainId;
-
+    // External Protocol Configurations
     address private immutable aavePoolAddress;
     address private immutable hyperlaneMailboxAddress;
+
+    address private immutable usdcAddress;
+    uint32 private immutable cctpChainId;
 
     // Mappings
     mapping(uint32 => address) private chainIdToAddress;
@@ -46,6 +49,10 @@ contract LoanProtector {
     mapping(bytes32 => OrderExecutionDetails) public orderExecutionDetails;
 
     // Events
+
+    constructor(address _wormholeRelayer, address _tokenBridge, address _wormhole)
+        TokenBase(_wormholeRelayer, _tokenBridge, _wormhole)
+    {}
 
     modifier OnlyOwner() {
         require(msg.sender == owner, "Only the owner can call this function");
@@ -151,18 +158,6 @@ contract LoanProtector {
         IERC20(order.tipTokenAdress).transfer(msg.sender, order.tipAmount);
     }
 
-    function sendMessageToDestinationChain(uint32 destinationChainId, bytes32 orderId) internal {
-        // Call Hyperlane to send the message to the destination chain
-        IHyperlaneMailbox hyperlaneMailbox = IHyperlaneMailbox(hyperlaneMailboxAddress);
-        bytes32 recipientAddress = addressToBytes32(chainIdToAddress[destinationChainId]);
-
-        bytes memory messageBody = abi.encode(orderId);
-
-        uint256 fee = hyperlaneMailbox.quoteDispatch(destinationChainId, recipientAddress, messageBody);
-
-        hyperlaneMailbox.dispatch{value: fee}(destinationChainId, recipientAddress, messageBody);
-    }
-
     function sameChainOrderExecution(bytes32 orderId) internal {
         OrderExecutionDetails memory orderExecution = orderExecutionDetails[orderId];
 
@@ -184,15 +179,77 @@ contract LoanProtector {
         delete orders[orderId];
     }
 
+    function sendMessageToDestinationChain(uint32 destinationChainId, bytes32 orderId) internal {
+        // Call Hyperlane to send the message to the destination chain
+        IHyperlaneMailbox hyperlaneMailbox = IHyperlaneMailbox(hyperlaneMailboxAddress);
+        bytes32 recipientAddress = addressToBytes32(chainIdToAddress[destinationChainId]);
+
+        bytes memory messageBody = abi.encode(orderId);
+
+        uint256 fee = hyperlaneMailbox.quoteDispatch(destinationChainId, recipientAddress, messageBody);
+
+        hyperlaneMailbox.dispatch{value: fee}(destinationChainId, recipientAddress, messageBody);
+    }
+
     function handle(uint32 _origin, bytes32 _sender, bytes calldata _message) external payable {
         // Ensure the function is called by Hyperlane
         require(msg.sender == hyperlaneMailboxAddress, "Only Hyperlane can call this function");
 
+        address originAddress = chainIdToAddress[_origin];
+
         // Check if the message is from valid sender
-        require(_sender == addressToBytes32(chainIdToAddress[_origin]), "Invalid sender");
+        require(_sender == addressToBytes32(originAddress), "Invalid sender");
 
         // Decode the message to get the order ID
         bytes32 orderId = abi.decode(_message, (bytes32));
+
+        OrderExecutionDetails memory orderExecution = orderExecutionDetails[orderId];
+
+        bridgeFunds(
+            orderExecution.tokenAddress, orderExecution.tokenAmount, _origin, originAddress, orderExecution.repay
+        );
+    }
+
+    function bridgeFunds(
+        address tokenAddress,
+        uint256 tokenAmount,
+        uint32 destinationChain,
+        address reciever,
+        bool repay
+    ) internal {
+        // Bridge using wormhole or cctp
+        if (tokenAddress == usdcAddress && destinationChain == cctpChainId) {
+            // Call CCTP to bridge the USDC
+        } else {
+            // Call Wormhole to bridge the asset
+            uint256 cost = quoteCrossChainDeposit(uint16(destinationChain));
+
+            require(address(this).balance >= cost, "Insufficient funds for cross-chain deposit");
+            
+            bytes memory payload = abi.encode(repay);
+
+            sendTokenWithPayloadToEvm(
+            uint16(destinationChain),
+            reciever,
+            payload,
+            0,
+            GAS_LIMIT,
+            tokenAddress,
+            tokenAmount
+        );
+
+        }
+    }
+
+      
+
+    
+
+    function quoteCrossChainDeposit(uint16 targetChain) public view returns (uint256 cost) {
+        uint256 deliveryCost;
+        (deliveryCost,) = wormholeRelayer.quoteEVMDeliveryPrice(targetChain, 0, GAS_LIMIT);
+
+        cost = deliveryCost + wormhole.messageFee();
     }
 
     function addExternalChainVault(uint32 chainId, address chainAddress) external OnlyOwner {

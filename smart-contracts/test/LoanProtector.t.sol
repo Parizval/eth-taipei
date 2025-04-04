@@ -8,6 +8,6 @@ contract LoanProtectorTest is Test {
     LoanProtector public loanProtector;
 
     function setUp() public {
-        loanProtector = new LoanProtector();
+        loanProtector = new LoanProtector(address(0), address(0), address(0));
     }
 }

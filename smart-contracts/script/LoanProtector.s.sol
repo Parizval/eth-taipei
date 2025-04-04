@@ -10,9 +10,10 @@ contract LoanProtectorScript is Script {
     function setUp() public {}
 
     function run() public {
+        // Set up the environment
         vm.startBroadcast();
 
-        loanProtector = new LoanProtector();
+        loanProtector = new LoanProtector(address(0), address(0), address(0));
 
         vm.stopBroadcast();
     }
