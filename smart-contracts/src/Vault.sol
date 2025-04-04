@@ -130,13 +130,28 @@ contract Vault is TokenSender, TokenReceiver {
     }
 
     function executeOrder(address conditionAddress, uint16 conditionId, uint256 conditionAmount) external {
-        // Call Aave to Check the condition is met
+        require(conditionId <= 3, "Invalid condition ID");
 
         bytes32 orderId = generateKey(conditionAddress, conditionId, conditionAmount);
         OrderDetails memory order = orders[orderId];
 
         // Ensure the order ID is valid
         require(order.tipAmount > 0, "Invalid order ID");
+
+        // Call Aave to Check the condition is met
+        (uint256 totalCollateralBase, uint256 totalDebtBase,,, uint256 ltv, uint256 healthFactor) =
+            AavePool(aavePoolAddress).getUserAccountData(owner);
+
+        // Check if the condition is met
+        if (conditionId == 0 && totalCollateralBase > conditionAmount) {
+            revert("Condition not met");
+        } else if (conditionId == 1 && conditionAmount > totalDebtBase) {
+            revert("Condition not met");
+        } else if (conditionId == 2 && ltv > conditionAmount) {
+            revert("Condition not met");
+        } else if (conditionId == 3 && healthFactor > conditionAmount) {
+            revert("Condition not met");
+        }
 
         if (order.destinationChainId == block.chainid) {
             // Same Chain Execution
