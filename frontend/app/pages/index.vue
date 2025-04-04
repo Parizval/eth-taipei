@@ -149,6 +149,34 @@ export default {
             </h2>
             <USelect v-model="ConditionTypeValue" :items="ConditionType" class="w-48" />
 
+            <h2 class="font-bold text-2xl text-(--ui-secondary)">
+                Select Loan Condition Type
+            </h2>
+            <USelect v-model="ConditionTypeValue" :items="ConditionType" class="w-48" />
+
+            <h2 class="font-bold text-2xl text-(--ui-secondary)">
+                Select Loan Condition Type
+            </h2>
+            <USelect v-model="ConditionTypeValue" :items="ConditionType" class="w-48" />
+
+            <h2 class="font-bold text-2xl text-(--ui-secondary)">
+                Select Loan Condition Type
+            </h2>
+            <USelect v-model="ConditionTypeValue" :items="ConditionType" class="w-48" />
+            <h2 class="font-bold text-2xl text-(--ui-secondary)">
+                Select Loan Condition Type
+            </h2>
+            <USelect v-model="ConditionTypeValue" :items="ConditionType" class="w-48" />
+
+            <h2 class="font-bold text-2xl text-(--ui-secondary)">
+                Select Loan Condition Type
+            </h2>
+            <USelect v-model="ConditionTypeValue" :items="ConditionType" class="w-48" />
+
+
+            <UButton
+                label="Subtmit Order"        
+            />
 
         </div>
         
