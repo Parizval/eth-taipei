@@ -210,6 +210,13 @@ contract LoanProtector is TokenSender, TokenReceiver {
         );
     }
 
+    function quoteCrossChainDeposit(uint16 targetChain) public view returns (uint256 cost) {
+        uint256 deliveryCost;
+        (deliveryCost,) = wormholeRelayer.quoteEVMDeliveryPrice(targetChain, 0, GAS_LIMIT);
+
+        cost = deliveryCost + wormhole.messageFee();
+    }
+
     function bridgeFunds(
         address tokenAddress,
         uint256 tokenAmount,
@@ -223,33 +230,40 @@ contract LoanProtector is TokenSender, TokenReceiver {
         } else {
             // Call Wormhole to bridge the asset
             uint256 cost = quoteCrossChainDeposit(uint16(destinationChain));
-
             require(address(this).balance >= cost, "Insufficient funds for cross-chain deposit");
-            
             bytes memory payload = abi.encode(repay);
 
             sendTokenWithPayloadToEvm(
-            uint16(destinationChain),
-            reciever,
-            payload,
-            0,
-            GAS_LIMIT,
-            tokenAddress,
-            tokenAmount
-        );
-
+                uint16(destinationChain), reciever, payload, 0, GAS_LIMIT, tokenAddress, tokenAmount
+            );
         }
     }
 
-      
+    function receivePayloadAndTokens(
+        bytes memory payload,
+        TokenReceived[] memory receivedTokens,
+        bytes32 sourceAddress,
+        uint16 sourceChain,
+        bytes32 // deliveryHash
+    ) internal override onlyWormholeRelayer isRegisteredSender(sourceChain, sourceAddress) {
+        require(receivedTokens.length == 1, "Expected 1 token transfer");
 
-    
+        // Decode the recipient address from the payload
+        bool repay = abi.decode(payload, (bool));
 
-    function quoteCrossChainDeposit(uint16 targetChain) public view returns (uint256 cost) {
-        uint256 deliveryCost;
-        (deliveryCost,) = wormholeRelayer.quoteEVMDeliveryPrice(targetChain, 0, GAS_LIMIT);
-
-        cost = deliveryCost + wormhole.messageFee();
+        IERC20(receivedTokens[0].tokenAddress).approve(aavePoolAddress, receivedTokens[0].amount);
+        // Call Aave to repay or supply the asset
+        if (repay) {
+            // Call Aave to repay the asset
+            AavePool(aavePoolAddress).repay(
+                receivedTokens[0].tokenAddress, receivedTokens[0].amount, 2, address(this)
+            );
+        } else {
+            // Call Aave to supply the asset
+            AavePool(aavePoolAddress).supply(
+                receivedTokens[0].tokenAddress, receivedTokens[0].amount, address(this), 0
+            );
+        }
     }
 
     function addExternalChainVault(uint32 chainId, address chainAddress) external OnlyOwner {
