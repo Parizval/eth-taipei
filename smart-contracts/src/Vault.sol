@@ -33,8 +33,8 @@ contract Vault is TokenSender, TokenReceiver {
     uint256 constant GAS_LIMIT = 250_000;
 
     // State variables
-    address public immutable owner;
-    address public immutable factoryAddress;
+    address private immutable owner;
+    address private immutable factoryAddress;
 
     // External Protocol Configurations
     address private immutable aavePoolAddress;
@@ -259,7 +259,7 @@ contract Vault is TokenSender, TokenReceiver {
 
         } else {
             // Call Wormhole to bridge the asset
-            uint16 wormholeChainId = IFactory(owner).getWorldChainId(destinationChain);
+            uint16 wormholeChainId = IFactory(factoryAddress).getWorldChainId(destinationChain);
 
             uint256 cost = quoteCrossChainDeposit(wormholeChainId);
             require(address(this).balance >= cost, "Insufficient funds for cross-chain deposit");
