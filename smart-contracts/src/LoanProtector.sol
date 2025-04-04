@@ -35,6 +35,8 @@ contract LoanProtector {
     // State variables
     address public owner;
 
+
+    // Mappings 
     mapping(uint32 => address) private chainIdToAddress;
 
     mapping(bytes32 => OrderDetails) public orders; 
@@ -42,7 +44,8 @@ contract LoanProtector {
     mapping(bytes32 => OrderExecutionDetails) public orderExecutionDetails;
 
 
- 
+    // Events
+
 
     modifier OnlyOwner() {
         require(msg.sender == owner, "Only the owner can call this function");
@@ -104,17 +107,14 @@ contract LoanProtector {
         delete orders[orderId];
     }
 
-
     function depositAsset(
         bytes32 orderId,
         address tokenAddress,
         uint256 tokenAmount,
         uint16 assetType,
         bool repay
-    ) external OnlyOwner {
-        // Ensure the order ID is valid
-        require(orders[orderId].tipAmount > 0, "Invalid order ID");
-
+    ) external {
+        
         // Create the order execution details
         OrderExecutionDetails memory newOrderExecution = OrderExecutionDetails({
             tokenAddress: tokenAddress,
@@ -125,7 +125,6 @@ contract LoanProtector {
 
         // Store the order execution details in the mapping
         orderExecutionDetails[orderId] = newOrderExecution;
-
 
         // Transfer the asset from the sender to the contract
         IERC20(tokenAddress).transferFrom(msg.sender, address(this), tokenAmount);
@@ -145,17 +144,63 @@ contract LoanProtector {
         delete orderExecutionDetails[orderId];
     }
 
+    function executeOrder(
+        address conditionAddress,
+        uint16 conditionId,
+        uint256 conditionAmount
+    ) external  {
+    
+        // Call Aave to Check the condition is met
+
+    
+
+        bytes32 orderId = generateKey(conditionAddress, conditionId, conditionAmount);
+        OrderDetails memory order = orders[orderId];
+
+        // Ensure the order ID is valid
+        require(order.tipAmount > 0, "Invalid order ID");
+
+        if (order.destinationChainId == block.chainid) {
+            // Same Chain Execution
+            sameChainOrderExecution(orderId);
+        } else {
+            // Call Hyperlane to send message to the destination chain
+            
+        }
+        // Delete the order and order execution details from the mappings
+        delete orders[orderId];
+    
+        IERC20(order.tipTokenAdress).transfer(msg.sender, order.tipAmount);
+    }
 
 
-    function addChainId(uint32 chainId, address chainAddress) external OnlyOwner {
+    function sameChainOrderExecution(
+        bytes32 orderId
+    ) internal {
+
+
+        
+
+        // Execute the order on the same chain
+        // Call Aave to execute the order
+
+        // Delete the order and order execution details from the mappings
+        delete orders[orderId];
+    }
+
+
+
+
+
+    function addExternalChainVault(uint32 chainId, address chainAddress) external OnlyOwner {
         chainIdToAddress[chainId] = chainAddress;
     }
 
-    function removeChainId(uint32 chainId) external OnlyOwner {
+    function removeExternalChainVault(uint32 chainId) external OnlyOwner {
         delete chainIdToAddress[chainId];
     }
     
-    function getChainAddress(uint32 chainId) external view returns (address) {
+    function getExternalChainVault(uint32 chainId) external view returns (address) {
         return chainIdToAddress[chainId];
     }
 
