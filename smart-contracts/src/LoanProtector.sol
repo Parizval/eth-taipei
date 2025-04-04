@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+
 // Protocols To Be Integrated
 // 1. Aave
 // 2. Hyperlane
@@ -68,6 +71,11 @@ contract LoanProtector {
 
         // Store the order in the mapping
         orders[orderId] = newOrder;
+
+        
+        // Transfer the tip amount from the sender to the contract
+        IERC20(tipTokenAdress).transferFrom(msg.sender, address(this), tipAmount);
+
     }
 
 
