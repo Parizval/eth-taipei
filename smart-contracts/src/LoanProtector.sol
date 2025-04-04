@@ -17,13 +17,13 @@ import {IHyperlaneMailbox} from "./interfaces/IHyperlane.sol";
 struct OrderDetails {
     uint32 destinationChainId;
     // Order Tip Details
-    address tipTokenAdress;
+    address tipToken;
     uint256 tipAmount;
 }
 
 struct OrderExecutionDetails {
-    address tokenAddress;
-    uint256 tokenAmount;
+    address token;
+    uint256 amount;
     uint16 assetType;
     bool repay;
 }
@@ -69,7 +69,7 @@ contract LoanProtector is TokenSender, TokenReceiver {
         uint16 conditionId,
         uint256 conditionAmount,
         uint32 destinationChainId,
-        address tipTokenAdress,
+        address tipToken,
         uint256 tipAmount
     ) external OnlyOwner returns (bytes32) {
         // Ensure the condition amount is greater than zero
@@ -84,13 +84,13 @@ contract LoanProtector is TokenSender, TokenReceiver {
 
         // Create the order details
         OrderDetails memory newOrder =
-            OrderDetails({destinationChainId: destinationChainId, tipTokenAdress: tipTokenAdress, tipAmount: tipAmount});
+            OrderDetails({destinationChainId: destinationChainId, tipToken: tipToken, tipAmount: tipAmount});
 
         // Store the order in the mapping
         orders[orderId] = newOrder;
 
         // Transfer the tip amount from the sender to the contract
-        IERC20(tipTokenAdress).transferFrom(msg.sender, address(this), tipAmount);
+        IERC20(tipToken).transferFrom(msg.sender, address(this), tipAmount);
 
         return orderId;
     }
@@ -100,38 +100,30 @@ contract LoanProtector is TokenSender, TokenReceiver {
         require(orders[orderId].tipAmount > 0, "Invalid order ID");
 
         // Transfer the tip amount back to the sender
-        IERC20(orders[orderId].tipTokenAdress).transfer(msg.sender, orders[orderId].tipAmount);
+        IERC20(orders[orderId].tipToken).transfer(msg.sender, orders[orderId].tipAmount);
 
         // Delete the order from the mapping
         delete orders[orderId];
     }
 
-    function depositAsset(bytes32 orderId, address tokenAddress, uint256 tokenAmount, uint16 assetType, bool repay)
-        external
-    {
+    function depositAsset(bytes32 orderId, address _token, uint256 _amount, uint16 assetType, bool repay) external {
         // Create the order execution details
-        OrderExecutionDetails memory newOrderExecution = OrderExecutionDetails({
-            tokenAddress: tokenAddress,
-            tokenAmount: tokenAmount,
-            assetType: assetType,
-            repay: repay
-        });
+        OrderExecutionDetails memory newOrderExecution =
+            OrderExecutionDetails({token: _token, amount: _amount, assetType: assetType, repay: repay});
 
         // Store the order execution details in the mapping
         orderExecutionDetails[orderId] = newOrderExecution;
 
         // Transfer the asset from the sender to the contract
-        IERC20(tokenAddress).transferFrom(msg.sender, address(this), tokenAmount);
+        IERC20(_token).transferFrom(msg.sender, address(this), _amount);
     }
 
     function cancelAssetDeposit(bytes32 orderId) external OnlyOwner {
         // Ensure the order ID is valid
-        require(orderExecutionDetails[orderId].tokenAmount > 0, "Invalid order ID");
+        require(orderExecutionDetails[orderId].amount > 0, "Invalid order ID");
 
         // Transfer the asset amount back to the sender
-        IERC20(orderExecutionDetails[orderId].tokenAddress).transfer(
-            msg.sender, orderExecutionDetails[orderId].tokenAmount
-        );
+        IERC20(orderExecutionDetails[orderId].token).transfer(msg.sender, orderExecutionDetails[orderId].amount);
 
         // Delete the order execution details from the mapping
         delete orderExecutionDetails[orderId];
@@ -156,7 +148,7 @@ contract LoanProtector is TokenSender, TokenReceiver {
         // Delete the order and order execution details from the mappings
         delete orders[orderId];
 
-        IERC20(order.tipTokenAdress).transfer(msg.sender, order.tipAmount);
+        IERC20(order.tipToken).transfer(msg.sender, order.tipAmount);
     }
 
     function sameChainOrderExecution(bytes32 orderId) internal {
@@ -165,15 +157,15 @@ contract LoanProtector is TokenSender, TokenReceiver {
         // Destructure the token based on the asset type
 
         // Approve call may change based on the asset type
-        IERC20(orderExecution.tokenAddress).approve(aavePoolAddress, orderExecution.tokenAmount);
+        IERC20(orderExecution.token).approve(aavePoolAddress, orderExecution.amount);
 
         // Call Aave to repay or supply the asset
         if (orderExecution.repay) {
             // Call Aave to repay the asset
-            AavePool(aavePoolAddress).repay(orderExecution.tokenAddress, orderExecution.tokenAmount, 2, owner);
+            AavePool(aavePoolAddress).repay(orderExecution.token, orderExecution.amount, 2, owner);
         } else {
             // Call Aave to supply the asset
-            AavePool(aavePoolAddress).supply(orderExecution.tokenAddress, orderExecution.tokenAmount, owner, 0);
+            AavePool(aavePoolAddress).supply(orderExecution.token, orderExecution.amount, owner, 0);
         }
 
         // Delete the order and order execution details from the mappings
@@ -206,9 +198,7 @@ contract LoanProtector is TokenSender, TokenReceiver {
 
         OrderExecutionDetails memory orderExecution = orderExecutionDetails[orderId];
 
-        bridgeFunds(
-            orderExecution.tokenAddress, orderExecution.tokenAmount, _origin, originAddress, orderExecution.repay
-        );
+        bridgeFunds(orderExecution.token, orderExecution.amount, _origin, originAddress, orderExecution.repay);
     }
 
     function quoteCrossChainDeposit(uint16 targetChain) public view returns (uint256 cost) {
@@ -218,16 +208,12 @@ contract LoanProtector is TokenSender, TokenReceiver {
         cost = deliveryCost + wormhole.messageFee();
     }
 
-    function bridgeFunds(
-        address tokenAddress,
-        uint256 tokenAmount,
-        uint32 destinationChain,
-        address reciever,
-        bool repay
-    ) internal {
+    function bridgeFunds(address token, uint256 tokenAmount, uint32 destinationChain, address reciever, bool repay)
+        internal
+    {
         // Bridge using wormhole or cctp
-        if (tokenAddress == usdcAddress && destinationChain == cctpChainId) {
-            IERC20(tokenAddress).approve(cctpAddress, tokenAmount);
+        if (token == usdcAddress && destinationChain == cctpChainId) {
+            IERC20(token).approve(cctpAddress, tokenAmount);
 
             // Call CCTP to bridge the USDC
         } else {
@@ -236,9 +222,7 @@ contract LoanProtector is TokenSender, TokenReceiver {
             require(address(this).balance >= cost, "Insufficient funds for cross-chain deposit");
             bytes memory payload = abi.encode(repay);
 
-            sendTokenWithPayloadToEvm(
-                uint16(destinationChain), reciever, payload, 0, GAS_LIMIT, tokenAddress, tokenAmount
-            );
+            sendTokenWithPayloadToEvm(uint16(destinationChain), reciever, payload, 0, GAS_LIMIT, token, tokenAmount);
         }
     }
 
