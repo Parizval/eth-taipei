@@ -8,7 +8,7 @@ import {AavePool} from "./interfaces/IAavePool.sol";
 import {IHyperlaneMailbox} from "./interfaces/IHyperlane.sol";
 
 // Protocols To Be Integrated
-// 1. Aave (Condition Check testing required)
+// 1. Aave (Condition Check done and asset supply/replay should work)
 // 2. Hyperlane (Testing Remaining)
 // 3. Wormhole (Testing Remaining)
 // 4. Circle CCTP (Code needs to be added for bridging USDC)
