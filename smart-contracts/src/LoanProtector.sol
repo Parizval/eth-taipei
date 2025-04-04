@@ -3,7 +3,6 @@ pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-
 import {AavePool} from "./interfaces/IAavePool.sol";
 import {IHyperlaneMailbox} from "./interfaces/IHyperlane.sol";
 
@@ -14,48 +13,39 @@ import {IHyperlaneMailbox} from "./interfaces/IHyperlane.sol";
 // 4. Circle CCTP
 // 5. Uniswap
 
-struct OrderDetails{
+struct OrderDetails {
     uint32 destinationChainId;
-
-    // Order Tip Details 
+    // Order Tip Details
     address tipTokenAdress;
     uint256 tipAmount;
 }
 
-struct OrderExecutionDetails{
+struct OrderExecutionDetails {
     address tokenAddress;
     uint256 tokenAmount;
     uint16 assetType;
-    bool repay; 
+    bool repay;
 }
 
-
-
 contract LoanProtector {
-
     // State variables
     address public immutable owner;
 
-
-    // Configuration 
+    // Configuration
     address private immutable usdcAddress;
     uint32 private immutable cctpChainId;
 
     address private immutable aavePoolAddress;
     address private immutable hyperlaneMailboxAddress;
 
-
-
-    // Mappings 
+    // Mappings
     mapping(uint32 => address) private chainIdToAddress;
 
-    mapping(bytes32 => OrderDetails) public orders; 
+    mapping(bytes32 => OrderDetails) public orders;
 
     mapping(bytes32 => OrderExecutionDetails) public orderExecutionDetails;
 
-
     // Events
-
 
     modifier OnlyOwner() {
         require(msg.sender == owner, "Only the owner can call this function");
@@ -70,13 +60,10 @@ contract LoanProtector {
         address conditionAddress,
         uint16 conditionId,
         uint256 conditionAmount,
-
         uint32 destinationChainId,
         address tipTokenAdress,
         uint256 tipAmount
     ) external OnlyOwner returns (bytes32) {
-
-
         // Ensure the condition amount is greater than zero
         require(conditionAmount > 0, "Condition amount must be greater than zero");
         // Ensure the tip amount is greater than zero
@@ -88,25 +75,19 @@ contract LoanProtector {
         bytes32 orderId = generateKey(conditionAddress, conditionId, conditionAmount);
 
         // Create the order details
-        OrderDetails memory newOrder = OrderDetails({
-            destinationChainId: destinationChainId,
-            tipTokenAdress: tipTokenAdress,
-            tipAmount: tipAmount
-        });
+        OrderDetails memory newOrder =
+            OrderDetails({destinationChainId: destinationChainId, tipTokenAdress: tipTokenAdress, tipAmount: tipAmount});
 
         // Store the order in the mapping
         orders[orderId] = newOrder;
 
-        
         // Transfer the tip amount from the sender to the contract
         IERC20(tipTokenAdress).transferFrom(msg.sender, address(this), tipAmount);
 
         return orderId;
     }
 
-    function cancelOrder(
-        bytes32 orderId
-    ) external OnlyOwner {
+    function cancelOrder(bytes32 orderId) external OnlyOwner {
         // Ensure the order ID is valid
         require(orders[orderId].tipAmount > 0, "Invalid order ID");
 
@@ -117,14 +98,9 @@ contract LoanProtector {
         delete orders[orderId];
     }
 
-    function depositAsset(
-        bytes32 orderId,
-        address tokenAddress,
-        uint256 tokenAmount,
-        uint16 assetType,
-        bool repay
-    ) external {
-        
+    function depositAsset(bytes32 orderId, address tokenAddress, uint256 tokenAmount, uint16 assetType, bool repay)
+        external
+    {
         // Create the order execution details
         OrderExecutionDetails memory newOrderExecution = OrderExecutionDetails({
             tokenAddress: tokenAddress,
@@ -138,31 +114,23 @@ contract LoanProtector {
 
         // Transfer the asset from the sender to the contract
         IERC20(tokenAddress).transferFrom(msg.sender, address(this), tokenAmount);
-
     }
 
-    function cancelAssetDeposit(
-        bytes32 orderId
-    ) external OnlyOwner {
+    function cancelAssetDeposit(bytes32 orderId) external OnlyOwner {
         // Ensure the order ID is valid
         require(orderExecutionDetails[orderId].tokenAmount > 0, "Invalid order ID");
 
         // Transfer the asset amount back to the sender
-        IERC20(orderExecutionDetails[orderId].tokenAddress).transfer(msg.sender, orderExecutionDetails[orderId].tokenAmount);
+        IERC20(orderExecutionDetails[orderId].tokenAddress).transfer(
+            msg.sender, orderExecutionDetails[orderId].tokenAmount
+        );
 
         // Delete the order execution details from the mapping
         delete orderExecutionDetails[orderId];
     }
 
-    function executeOrder(
-        address conditionAddress,
-        uint16 conditionId,
-        uint256 conditionAmount
-    ) external  {
-    
+    function executeOrder(address conditionAddress, uint16 conditionId, uint256 conditionAmount) external {
         // Call Aave to Check the condition is met
-
-    
 
         bytes32 orderId = generateKey(conditionAddress, conditionId, conditionAmount);
         OrderDetails memory order = orders[orderId];
@@ -175,18 +143,15 @@ contract LoanProtector {
             sameChainOrderExecution(orderId);
         } else {
             // Call Hyperlane to send message to the destination chain
-            
+            sendMessageToDestinationChain(order.destinationChainId, orderId);
         }
         // Delete the order and order execution details from the mappings
         delete orders[orderId];
-    
+
         IERC20(order.tipTokenAdress).transfer(msg.sender, order.tipAmount);
     }
 
-    function sendMessageToDestinationChain(
-        uint32 destinationChainId,
-        bytes32 orderId
-    ) internal {
+    function sendMessageToDestinationChain(uint32 destinationChainId, bytes32 orderId) internal {
         // Call Hyperlane to send the message to the destination chain
         IHyperlaneMailbox hyperlaneMailbox = IHyperlaneMailbox(hyperlaneMailboxAddress);
         bytes32 recipientAddress = addressToBytes32(chainIdToAddress[destinationChainId]);
@@ -196,53 +161,39 @@ contract LoanProtector {
         uint256 fee = hyperlaneMailbox.quoteDispatch(destinationChainId, recipientAddress, messageBody);
 
         hyperlaneMailbox.dispatch{value: fee}(destinationChainId, recipientAddress, messageBody);
-
     }
 
-
-    function sameChainOrderExecution(
-        bytes32 orderId
-    ) internal {
+    function sameChainOrderExecution(bytes32 orderId) internal {
         OrderExecutionDetails memory orderExecution = orderExecutionDetails[orderId];
 
         // Destructure the token based on the asset type
-
-
 
         // Approve call may change based on the asset type
         IERC20(orderExecution.tokenAddress).approve(aavePoolAddress, orderExecution.tokenAmount);
 
         // Call Aave to repay or supply the asset
-        if (orderExecution.repay){
+        if (orderExecution.repay) {
             // Call Aave to repay the asset
-            AavePool(aavePoolAddress).repay(
-                orderExecution.tokenAddress,
-                orderExecution.tokenAmount,
-                2,
-                owner
-            );
-
-        }else{
+            AavePool(aavePoolAddress).repay(orderExecution.tokenAddress, orderExecution.tokenAmount, 2, owner);
+        } else {
             // Call Aave to supply the asset
-            AavePool(aavePoolAddress).supply(
-                orderExecution.tokenAddress,
-                orderExecution.tokenAmount,
-                owner,
-                0
-            );
+            AavePool(aavePoolAddress).supply(orderExecution.tokenAddress, orderExecution.tokenAmount, owner, 0);
         }
-        
+
         // Delete the order and order execution details from the mappings
         delete orders[orderId];
     }
 
-    
+    function handle(uint32 _origin, bytes32 _sender, bytes calldata _message) external payable {
+        // Ensure the function is called by Hyperlane
+        require(msg.sender == hyperlaneMailboxAddress, "Only Hyperlane can call this function");
 
+        // Check if the message is from valid sender
+        require(_sender == addressToBytes32(chainIdToAddress[_origin]), "Invalid sender");
 
-
-
-
-
+        // Decode the message to get the order ID
+        bytes32 orderId = abi.decode(_message, (bytes32));
+    }
 
     function addExternalChainVault(uint32 chainId, address chainAddress) external OnlyOwner {
         chainIdToAddress[chainId] = chainAddress;
@@ -251,17 +202,16 @@ contract LoanProtector {
     function removeExternalChainVault(uint32 chainId) external OnlyOwner {
         delete chainIdToAddress[chainId];
     }
-    
+
     function getExternalChainVault(uint32 chainId) external view returns (address) {
         return chainIdToAddress[chainId];
     }
 
-
-    function generateKey(
-        address conditionAddress,
-        uint16 conditionId,
-        uint256 conditionAmount
-    ) public pure returns (bytes32) {
+    function generateKey(address conditionAddress, uint16 conditionId, uint256 conditionAmount)
+        public
+        pure
+        returns (bytes32)
+    {
         return keccak256(abi.encodePacked(conditionAddress, conditionId, conditionAmount));
     }
 
@@ -269,10 +219,7 @@ contract LoanProtector {
         return bytes32(uint256(uint160(_addr)));
     }
 
-
     function getOrderDetails(bytes32 orderId) external view returns (OrderDetails memory) {
         return orders[orderId];
     }
-
-
 }
