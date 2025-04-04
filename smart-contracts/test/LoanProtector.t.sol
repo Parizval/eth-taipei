@@ -11,9 +11,6 @@ contract LoanProtectorTest is Test {
 
     function setUp() public {
         loanProtector = new LoanProtector();
-
-
     }
-
 
 }

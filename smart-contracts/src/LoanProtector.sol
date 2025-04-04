@@ -4,6 +4,9 @@ pragma solidity ^0.8.13;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 
+import {AavePool} from "./interfaces/IAavePool.sol";
+
+
 // Protocols To Be Integrated
 // 1. Aave
 // 2. Hyperlane
@@ -196,8 +199,21 @@ contract LoanProtector {
         // Call Aave to repay or supply the asset
         if (orderExecution.repay){
             // Call Aave to repay the asset
+            AavePool(aavePoolAddress).repay(
+                orderExecution.tokenAddress,
+                orderExecution.tokenAmount,
+                2,
+                owner
+            );
+
         }else{
             // Call Aave to supply the asset
+            AavePool(aavePoolAddress).supply(
+                orderExecution.tokenAddress,
+                orderExecution.tokenAmount,
+                owner,
+                0
+            );
         }
         
         // Delete the order and order execution details from the mappings
