@@ -7,6 +7,7 @@ import "lib/wormhole-solidity-sdk/src/WormholeRelayerSDK.sol";
 import {AavePool} from "./interfaces/IAavePool.sol";
 import {IHyperlaneMailbox} from "./interfaces/IHyperlane.sol";
 import {IFactory} from "./interfaces/IFactory.sol";
+// import {ICCTP} from "./interfaces/ICCTP.sol";
 
 // Protocols To Be Integrated
 // 1. Aave (Condition Check done and asset supply/replay should work)
@@ -249,7 +250,7 @@ contract Vault is TokenSender, TokenReceiver {
 
         uint256 fee = hyperlaneMailbox.quoteDispatch(destinationChainId, recipientAddress, messageBody);
 
-        hyperlaneMailbox.dispatch{value: fee * 2}(destinationChainId, recipientAddress, messageBody);
+        hyperlaneMailbox.dispatch{value: fee * 5}(destinationChainId, recipientAddress, messageBody);
     }
 
     function handle(uint32 _origin, bytes32 _sender, bytes calldata _message) external payable {
@@ -289,7 +290,6 @@ contract Vault is TokenSender, TokenReceiver {
         if (token == usdcAddress && destinationChain == cctpChainId) {
             IERC20(token).approve(tokenMessenger, tokenAmount);
             // Call CCTP to bridge the USDC
-
             // Call Factory contract to emit the cross chain transfer event
             IFactory(factoryAddress).emitCrossChainTransfer(owner, usdcAddress, tokenAmount);
         } else {
@@ -307,6 +307,8 @@ contract Vault is TokenSender, TokenReceiver {
             sendTokenWithPayloadToEvm(wormholeChainId, reciever, payload, 0, GAS_LIMIT, token, tokenAmount);
         }
     }
+
+
 
     function receivePayloadAndTokens(
         bytes memory payload,
