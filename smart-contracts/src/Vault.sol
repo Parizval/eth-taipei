@@ -55,6 +55,11 @@ contract Vault is TokenSender, TokenReceiver {
 
     // Events
 
+
+
+    // Errors 
+    error ConditionInvalid(uint sentValue, uint currentValue);
+
     constructor(
         address _owner,
         address _aavePoolAddress,
@@ -166,13 +171,13 @@ contract Vault is TokenSender, TokenReceiver {
 
         // Check if the condition is met
         if (conditionId == 0 && totalCollateralBase > conditionAmount) {
-            revert("Condition not met");
+            revert ConditionInvalid(conditionAmount, totalCollateralBase);
         } else if (conditionId == 1 && conditionAmount > totalDebtBase) {
-            revert("Condition not met");
+            revert ConditionInvalid(conditionAmount, totalDebtBase);
         } else if (conditionId == 2 && ltv > conditionAmount) {
-            revert("Condition not met");
+            revert ConditionInvalid(conditionAmount, ltv);
         } else if (conditionId == 3 && healthFactor > conditionAmount) {
-            revert("Condition not met");
+            revert ConditionInvalid(conditionAmount, healthFactor);
         }
 
         if (order.destinationChainId == block.chainid) {
