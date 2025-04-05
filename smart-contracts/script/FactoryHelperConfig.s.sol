@@ -48,14 +48,14 @@ contract FactoryHelperConfig is Script, ChainIdConfiguration {
 
     function getBaseSepoliaConfig() public pure returns (NetworkConfig memory) {
         return NetworkConfig({
-            aavePoolAddress: 0x1234567890123456789012345678901234567890, // TODO
+            aavePoolAddress: 0x39D034F2E2bAB2Ac193A318f745A2F906DFe3C9b,
             hyperlaneMailboxAddress: 0x6966b0E55883d49BFB24539356a2f8A673E02039,
             usdcAddress: 0x1234567890123456789012345678901234567890,
             tokenMessenger: 0x1234567890123456789012345678901234567890,
             wormholeRelayer: 0x93BAD53DDfB6132b0aC8E37f6029163E63372cEE,
             tokenBridge: 0x86F55A04690fd7815A3D802bD587e83eA888B239,
             wormhole: 0x79A1027a6A159502049F10906D333EC57E95F083,
-            cctpChainId: 43113,
+            cctpChainId: 0,
             cctpValue: 1
         });
     }
@@ -69,7 +69,7 @@ contract FactoryHelperConfig is Script, ChainIdConfiguration {
             wormholeRelayer: 0xA3cF45939bD6260bcFe3D66bc73d60f19e49a8BB,
             tokenBridge: 0x61E44E506Ca5659E6c0bba9b678586fA2d729756,
             wormhole: 0x7bbcE28e64B3F8b84d876Ab298393c38ad7aac4C,
-            cctpChainId: 84532,
+            cctpChainId: 0,
             cctpValue: 1
         });
     }

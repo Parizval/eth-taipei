@@ -5,11 +5,13 @@ import {Script, console} from "forge-std/Script.sol";
 import {VaultFactory} from "../src/VaultFactory.sol";
 import {FactoryHelperConfig} from "./FactoryHelperConfig.s.sol";
 
-contract deployVault is Script {
+contract DeployFactory is Script {
     function setUp() public {}
 
     function run() public {
         // Set up the environment
+
+        deployFactoryContract();
     }
 
     function deployFactoryContract() public returns (VaultFactory, FactoryHelperConfig) {

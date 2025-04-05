@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import {Script, console} from "forge-std/Script.sol";
 import {AavePool} from "../src/AaveMock.sol";
 
-contract VaultScript is Script {
+contract AaveMockScript is Script {
     AavePool public aavePool;
 
     function setUp() public {}
