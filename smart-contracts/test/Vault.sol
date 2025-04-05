@@ -65,6 +65,8 @@ contract VaultTest is Test {
         assertEq(usdc.balanceOf(address(2)), 100); // TIP 
         assertEq(usdc.balanceOf(address(aavePool)), 100);
 
+        assertEq(usdc.balanceOf(address(vault)), 0);
+
     }
 
 
