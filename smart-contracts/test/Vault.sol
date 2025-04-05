@@ -11,8 +11,6 @@ contract MockERC20 is ERC20 {
     constructor(string memory name, string memory symbol) ERC20(name, symbol) {
         _mint(msg.sender, 1000000 * 10 ** decimals());
     }
-
-    
 }
 
 contract VaultTest is Test {
@@ -21,24 +19,22 @@ contract VaultTest is Test {
     AavePool public aavePool;
     ERC20 public usdc;
 
-
     function setUp() public {
-
         vm.startPrank(address(1));
 
         aavePool = new AavePool();
 
         vaultFactory = new VaultFactory();
 
-        vault = new Vault(address(1), address(vaultFactory), address(aavePool), address(0), address(0), address(0), address(0), address(0), address(0), 0, 0);
+        vault =
+            new Vault(address(1), address(vaultFactory), address(aavePool), address(0), address(0), address(0), 0, 0);
 
         usdc = new MockERC20("USDC", "USDC");
-    
+
         vm.stopPrank();
     }
 
-    function testOrderCreationWithSameExecution() public{
-
+    function testOrderCreationWithSameExecution() public {
         vm.startPrank(address(1));
 
         vaultFactory.addVault(address(vault));
@@ -62,12 +58,9 @@ contract VaultTest is Test {
         vm.prank(address(2));
         vault.executeOrder(address(0), 0, 1500);
 
-        assertEq(usdc.balanceOf(address(2)), 100); // TIP 
+        assertEq(usdc.balanceOf(address(2)), 100); // TIP
         assertEq(usdc.balanceOf(address(aavePool)), 100);
 
         assertEq(usdc.balanceOf(address(vault)), 0);
-
     }
-
-
 }
