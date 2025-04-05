@@ -50,11 +50,11 @@ contract VaultFactory {
         emit CrossChainTransfer(vault, _token, _amount);
     }
 
-    function setWorldChainId(uint32 _chainId, uint16 _worldChainId) external onlyOwner {
+    function setWormholeChainId(uint32 _chainId, uint16 _worldChainId) external onlyOwner {
         worldChainId[_chainId] = _worldChainId;
     }
 
-    function getWorldChainId(uint32 _chainId) external view returns (uint16) {
+    function getWormholeChainId(uint32 _chainId) external view returns (uint16) {
         return worldChainId[_chainId];
     }
 

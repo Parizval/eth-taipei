@@ -291,7 +291,7 @@ contract Vault is TokenSender, TokenReceiver {
             IFactory(factoryAddress).emitCrossChainTransfer(owner, usdcAddress, tokenAmount);
         } else {
             // Call Wormhole to bridge the asset
-            uint16 wormholeChainId = IFactory(factoryAddress).getWorldChainId(destinationChain);
+            uint16 wormholeChainId = IFactory(factoryAddress).getWormholeChainId(destinationChain);
 
             uint256 cost = quoteCrossChainDeposit(wormholeChainId);
 
