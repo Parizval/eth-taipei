@@ -11,4 +11,18 @@ interface IHyperlaneMailbox {
         external
         view
         returns (uint256 fee);
+
+    function quoteDispatch(
+        uint32 destinationDomain,
+        bytes32 recipientAddress,
+        bytes calldata messageBody,
+        bytes calldata defaultHookMetadata
+    ) external view returns (uint256 fee);
+
+    function dispatch(
+        uint32 destinationDomain,
+        bytes32 recipientAddress,
+        bytes calldata messageBody,
+        bytes calldata hookMetadata
+    ) external payable returns (bytes32);
 }

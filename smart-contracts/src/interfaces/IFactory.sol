@@ -8,5 +8,5 @@ interface IFactory {
 
     function emitCrossChainTransfer(address _owner, address _token, uint256 _amount) external;
 
-    function emitOrderCreation( address _owner, uint16 conditionId, uint256 conditionAmount) external;
+    function emitOrderCreation(address _owner, uint16 conditionId, uint256 conditionAmount) external;
 }
