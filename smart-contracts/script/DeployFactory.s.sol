@@ -19,7 +19,6 @@ contract DeployFactory is Script {
         vaultFactory = new VaultFactory();
 
         vm.stopBroadcast();
-
     }
 
     // function deployFactoryContract() public returns (VaultFactory, FactoryHelperConfig) {

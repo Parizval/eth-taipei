@@ -14,7 +14,17 @@ contract VaultScript is Script {
         vm.startBroadcast();
 
         vault = new Vault(
-            address(0), address(0), address(0), address(0), address(0), address(0), address(0), address(0), address(0), 8, 9
+            address(0),
+            address(0),
+            address(0),
+            address(0),
+            address(0),
+            address(0),
+            address(0),
+            address(0),
+            address(0),
+            8,
+            9
         );
 
         vm.stopBroadcast();

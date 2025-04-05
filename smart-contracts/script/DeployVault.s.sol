@@ -4,6 +4,8 @@ pragma solidity ^0.8.13;
 import {Script, console} from "forge-std/Script.sol";
 import {Vault} from "../src/Vault.sol";
 import {HelperConfig} from "./HelperConfig.s.sol";
+import {AavePool} from "../src/AaveMock.sol";
+import {VaultFactory} from "../src/VaultFactory.sol";
 
 contract DeployVault is Script {
     function setUp() public {}
@@ -18,10 +20,16 @@ contract DeployVault is Script {
         HelperConfig.NetworkConfig memory config = helperconfig.getConfig();
 
         vm.startBroadcast();
+
+        // Deploy the AavePool contract
+        AavePool aavePool = new AavePool();
+        // Deploy the VaultFactory contract
+        VaultFactory vaultFactory = new VaultFactory();
+
         Vault vault = new Vault(
-            config.owner, // vault owner
-            config.factoryAddress, // factory
-            config.aavePoolAddress, // aavePool
+            msg.sender, // vault owner
+            address(vaultFactory), // factory
+            address(aavePool), // aavePool mock
             config.hyperlaneMailboxAddress, // mailbox
             config.usdcAddress, // usdc
             config.tokenMessenger, // tokenMessenger
@@ -31,6 +39,14 @@ contract DeployVault is Script {
             config.cctpChainId, // cctpChainId
             config.cctpValue // cctpChainValue
         );
+
+        vaultFactory.addVault(address(vault));
+
+        aavePool.setUserData(1000, 1000, 1000, 1000, 1000, 1000);
+
+        vaultFactory.setWormholeChainId(11155111, 10002);
+        vaultFactory.setWormholeChainId(84532, 10004);
+
 
         vm.stopBroadcast();
         return (vault, helperconfig);
