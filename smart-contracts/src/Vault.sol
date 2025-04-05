@@ -7,9 +7,9 @@ import "lib/wormhole-solidity-sdk/src/WormholeRelayerSDK.sol";
 import {AavePool} from "./interfaces/IAavePool.sol";
 import {IHyperlaneMailbox} from "./interfaces/IHyperlane.sol";
 import {IFactory} from "./interfaces/IFactory.sol";
+import {ICCTP} from "./interfaces/ICCTP.sol";
 
 import {StandardHookMetadata} from "./Hook.sol";
-// import {ICCTP} from "./interfaces/ICCTP.sol";
 
 // Protocols To Be Integrated
 // 1. Aave (Condition Check done and asset supply/replay should work)
@@ -62,6 +62,7 @@ contract Vault {
     error ExecutionNotCreated();
 
     error SenderNotMailbox();
+    error SenderNotCircle();
     error NotOwner(address sender, address owner);
 
     error InvalidDestinationChainId();
@@ -287,12 +288,41 @@ contract Vault {
             IERC20(token).approve(tokenMessenger, tokenAmount);
             // Call CCTP to bridge the USDC
 
+            bytes memory callData = abi.encodeWithSignature("handleUSDC(uint256 amount, bool repay)", tokenAmount, repay);
+
+            bytes memory hookData = abi.encode(reciever, callData);
+
+            ICCTP(tokenMessenger).depositForBurnWithHook(
+                tokenAmount,
+                cctpValue,
+                addressToBytes32(reciever),
+                usdcAddress,
+                addressToBytes32(address(0)),
+                tokenAmount -1,
+                1000,
+                hookData
+            );
+
             // Call Factory contract to emit the cross chain transfer event
             IFactory(factoryAddress).emitCrossChainTransfer(owner, usdcAddress, tokenAmount);
         }
     }
 
-    // function handleUSDC()
+    function handleUSDC(uint256 amount, bool repay) external {
+        // Ensure the function is called by the Aave pool
+        if (msg.sender != messageTransmitter) {
+            revert SenderNotCircle();
+        }
+
+        // Call Aave to repay or supply the asset
+        if (repay) {
+            // Call Aave to repay the asset
+            AavePool(aavePoolAddress).repay(usdcAddress, amount, 2, owner);
+        } else {
+            // Call Aave to supply the asset
+            AavePool(aavePoolAddress).supply(usdcAddress, amount, owner, 0);
+        }
+    }
 
 
     function withdrawNativeToken(uint256 _amount) external OnlyOwner {
