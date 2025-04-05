@@ -328,7 +328,7 @@ contract Vault is TokenSender, TokenReceiver {
         }
     }
 
-    function HandleUsdc(bool repay) external {}
+    function HandleUsdc(uint256 amount, bool repay) external {}
 
     function withdrawNativeToken(uint256 _amount) external OnlyOwner {
         payable(owner).transfer(_amount);
