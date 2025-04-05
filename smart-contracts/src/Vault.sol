@@ -51,8 +51,6 @@ contract Vault is TokenSender, TokenReceiver {
 
     mapping(bytes32 => OrderExecutionDetails) public orderExecutionDetails;
 
-    // Events
-
     // Errors
     error ConditionInvalid(uint256 sentValue, uint256 currentValue);
     error ConditionAmountIsZero();
@@ -218,9 +216,6 @@ contract Vault is TokenSender, TokenReceiver {
 
     function sameChainOrderExecution(bytes32 orderId) internal {
         OrderExecutionDetails memory orderExecution = orderExecutionDetails[orderId];
-
-        // Destructure the token based on the asset type
-
         // Approve call may change based on the asset type
         IERC20(orderExecution.token).approve(aavePoolAddress, orderExecution.amount);
 
@@ -328,18 +323,12 @@ contract Vault is TokenSender, TokenReceiver {
         }
     }
 
-    function HandleUsdc(uint256 amount, bool repay) external {}
-
     function withdrawNativeToken(uint256 _amount) external OnlyOwner {
         payable(owner).transfer(_amount);
     }
 
     function addExternalChainVault(uint32 chainId, address chainAddress) external OnlyOwner {
         chainIdToAddress[chainId] = chainAddress;
-    }
-
-    function removeExternalChainVault(uint32 chainId) external OnlyOwner {
-        delete chainIdToAddress[chainId];
     }
 
     function getExternalChainVault(uint32 chainId) external view returns (address) {
@@ -356,9 +345,5 @@ contract Vault is TokenSender, TokenReceiver {
 
     function addressToBytes32(address _addr) internal pure returns (bytes32) {
         return bytes32(uint256(uint160(_addr)));
-    }
-
-    function getOrderDetails(bytes32 orderId) external view returns (OrderDetails memory) {
-        return orders[orderId];
     }
 }
