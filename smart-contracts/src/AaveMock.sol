@@ -68,16 +68,16 @@ contract AavePool {
         healthFactor = _healthFactor;
     }
 
-    function getUserData()
+    function getUserAccountData(address user)
         external
         view
         returns (
-            uint256 _totalCollateralBase,
-            uint256 _totalDebtBase,
-            uint256 _availableBorrowsBase,
-            uint256 _currentLiquidationThreshold,
-            uint256 _ltv,
-            uint256 _healthFactor
+            uint256 totalCollateralBase,
+            uint256 totalDebtBase,
+            uint256 availableBorrowsBase,
+            uint256 currentLiquidationThreshold,
+            uint256 ltv,
+            uint256 healthFactor
         )
     {
         return
