@@ -2,11 +2,10 @@
 pragma solidity ^0.8.13;
 
 contract VaultFactory {
-    
     event VaultUpdated(address indexed vaultAddress, address indexed owner);
     event CrossChainTransfer(address indexed vaultAddress, address indexed token, uint256 amount);
-    event OrderCreated(address indexed vaultAddress, uint16 conditionId, uint256 conditionAmount );
-    
+    event OrderCreated(address indexed vaultAddress, uint16 conditionId, uint256 conditionAmount);
+
     error InvalidVault();
     error VaultAlreadyExists(address vaultAddress);
 
@@ -22,10 +21,6 @@ contract VaultFactory {
     }
 
     mapping(address => address) public vaults;
-
-    mapping(uint32 => uint16) public wormholeChainMapping;
-
-    mapping(uint16 => uint32) public reverseWormholeChainMapping;
 
     function addVault(address _vault) external {
         vaults[msg.sender] = _vault;
@@ -44,7 +39,6 @@ contract VaultFactory {
     }
 
     function emitOrderCreation(address _owner, uint16 conditionId, uint256 conditionAmount) external {
-
         address vault = vaults[_owner];
 
         if (vault != msg.sender) {
@@ -52,20 +46,6 @@ contract VaultFactory {
         }
 
         emit OrderCreated(vault, conditionId, conditionAmount);
-    }
-
-
-    function setWormholeChainId(uint32 _chainId, uint16 _wormholeChainId) external onlyOwner {
-        wormholeChainMapping[_chainId] = _wormholeChainId;
-        reverseWormholeChainMapping[_wormholeChainId] = _chainId;
-    }
-
-    function getWormholeChainId(uint32 _chainId) external view returns (uint16) {
-        return wormholeChainMapping[_chainId];
-    }
-
-    function getReverseWormholeChainId(uint16 _wormholeChainId) external view returns (uint32) {
-        return reverseWormholeChainMapping[_wormholeChainId];
     }
 
     function getVaultAddress(address _owner) external view returns (address) {

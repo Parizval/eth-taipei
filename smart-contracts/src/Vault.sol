@@ -7,6 +7,8 @@ import "lib/wormhole-solidity-sdk/src/WormholeRelayerSDK.sol";
 import {AavePool} from "./interfaces/IAavePool.sol";
 import {IHyperlaneMailbox} from "./interfaces/IHyperlane.sol";
 import {IFactory} from "./interfaces/IFactory.sol";
+
+import {StandardHookMetadata} from "./Hook.sol";
 // import {ICCTP} from "./interfaces/ICCTP.sol";
 
 // Protocols To Be Integrated
@@ -29,8 +31,7 @@ struct OrderExecutionDetails {
     bool repay;
 }
 
-contract Vault is TokenSender, TokenReceiver {
-    uint256 constant GAS_LIMIT = 250_000;
+contract Vault {
     // State variables
     address private immutable owner;
     address private immutable factoryAddress;
@@ -75,12 +76,9 @@ contract Vault is TokenSender, TokenReceiver {
         address _hyperlaneMailboxAddress,
         address _usdcAddress,
         address _tokenMessenger,
-        address _wormholeRelayer,
-        address _tokenBridge,
-        address _wormhole,
         uint32 _cctpChainId,
         uint32 _cctpValue
-    ) TokenBase(_wormholeRelayer, _tokenBridge, _wormhole) {
+    ) {
         owner = _owner;
         factoryAddress = _factoryAddress;
 
@@ -246,11 +244,13 @@ contract Vault is TokenSender, TokenReceiver {
         IHyperlaneMailbox hyperlaneMailbox = IHyperlaneMailbox(hyperlaneMailboxAddress);
         bytes32 recipientAddress = addressToBytes32(chainIdToAddress[destinationChainId]);
 
+        bytes memory HookMetadata = StandardHookMetadata.overrideGasLimit(500000);
+
         bytes memory messageBody = abi.encode(orderId);
 
-        uint256 fee = hyperlaneMailbox.quoteDispatch(destinationChainId, recipientAddress, messageBody);
+        uint256 fee = hyperlaneMailbox.quoteDispatch(destinationChainId, recipientAddress, messageBody, HookMetadata);
 
-        hyperlaneMailbox.dispatch{value: fee * 10}(destinationChainId, recipientAddress, messageBody);
+        hyperlaneMailbox.dispatch{value: fee * 2}(destinationChainId, recipientAddress, messageBody, HookMetadata);
     }
 
     function handle(uint32 _origin, bytes32 _sender, bytes calldata _message) external payable {
@@ -276,13 +276,6 @@ contract Vault is TokenSender, TokenReceiver {
         bridgeFunds(orderExecution.token, orderExecution.amount, _origin, originAddress, orderExecution.repay);
     }
 
-    function quoteCrossChainDeposit(uint16 targetChain) public view returns (uint256 cost) {
-        uint256 deliveryCost;
-        (deliveryCost,) = wormholeRelayer.quoteEVMDeliveryPrice(targetChain, 0, GAS_LIMIT);
-
-        cost = deliveryCost + wormhole.messageFee();
-    }
-
     function bridgeFunds(address token, uint256 tokenAmount, uint32 destinationChain, address reciever, bool repay)
         internal
     {
@@ -290,44 +283,9 @@ contract Vault is TokenSender, TokenReceiver {
         if (token == usdcAddress && destinationChain == cctpChainId) {
             IERC20(token).approve(tokenMessenger, tokenAmount);
             // Call CCTP to bridge the USDC
+
             // Call Factory contract to emit the cross chain transfer event
             IFactory(factoryAddress).emitCrossChainTransfer(owner, usdcAddress, tokenAmount);
-        } else {
-            // Call Wormhole to bridge the asset
-            uint16 wormholeChainId = IFactory(factoryAddress).getWormholeChainId(destinationChain);
-
-            uint256 cost = quoteCrossChainDeposit(wormholeChainId);
-
-            if (address(this).balance < cost) {
-                revert InsufficientCrossChainDeposit(cost, address(this).balance);
-            }
-
-            bytes memory payload = abi.encode(repay);
-
-            sendTokenWithPayloadToEvm(wormholeChainId, reciever, payload, 0, GAS_LIMIT, token, tokenAmount);
-        }
-    }
-
-    function receivePayloadAndTokens(
-        bytes memory payload,
-        TokenReceived[] memory receivedTokens,
-        bytes32 sourceAddress,
-        uint16 sourceChain,
-        bytes32 // deliveryHash
-    ) internal override onlyWormholeRelayer isRegisteredSender(sourceChain, sourceAddress) {
-        require(receivedTokens.length == 1, "Expected 1 token transfer");
-
-        // Decode the recipient address from the payload
-        bool repay = abi.decode(payload, (bool));
-
-        IERC20(receivedTokens[0].tokenAddress).approve(aavePoolAddress, receivedTokens[0].amount);
-        // Call Aave to repay or supply the asset
-        if (repay) {
-            // Call Aave to repay the asset
-            AavePool(aavePoolAddress).repay(receivedTokens[0].tokenAddress, receivedTokens[0].amount, 2, address(this));
-        } else {
-            // Call Aave to supply the asset
-            AavePool(aavePoolAddress).supply(receivedTokens[0].tokenAddress, receivedTokens[0].amount, address(this), 0);
         }
     }
 

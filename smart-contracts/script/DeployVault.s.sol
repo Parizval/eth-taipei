@@ -41,10 +41,6 @@ contract DeployVault is Script {
 
         aavePool.setUserData(1000, 1000, 1000, 1000, 1000, 1000);
 
-        vaultFactory.setWormholeChainId(11155111, 10002);
-        vaultFactory.setWormholeChainId(84532, 10004);
-        vaultFactory.setWormholeChainId(43113, 6);
-
         vm.stopBroadcast();
         return (vault, helperconfig);
     }
