@@ -37,7 +37,7 @@ contract VaultTest is Test {
         vm.stopPrank();
     }
 
-    function testOrderCreation() public{
+    function testOrderCreationWithSameExecution() public{
 
         vm.startPrank(address(1));
 
@@ -62,6 +62,8 @@ contract VaultTest is Test {
         vm.prank(address(2));
         vault.executeOrder(address(0), 0, 1500);
 
+        assertEq(usdc.balanceOf(address(2)), 100); // TIP 
+        assertEq(usdc.balanceOf(address(aavePool)), 100);
 
     }
 
