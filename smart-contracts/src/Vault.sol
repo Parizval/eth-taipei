@@ -288,7 +288,8 @@ contract Vault {
             IERC20(token).approve(tokenMessenger, tokenAmount);
             // Call CCTP to bridge the USDC
 
-            bytes memory callData = abi.encodeWithSignature("handleUSDC(uint256 amount, bool repay)", tokenAmount, repay);
+            bytes memory callData =
+                abi.encodeWithSignature("handleUSDC(uint256 amount, bool repay)", tokenAmount, repay);
 
             bytes memory hookData = abi.encode(reciever, callData);
 
@@ -298,7 +299,7 @@ contract Vault {
                 addressToBytes32(reciever),
                 usdcAddress,
                 addressToBytes32(address(0)),
-                tokenAmount -1,
+                tokenAmount - 1,
                 1000,
                 hookData
             );
@@ -323,7 +324,6 @@ contract Vault {
             AavePool(aavePoolAddress).supply(usdcAddress, amount, owner, 0);
         }
     }
-
 
     function withdrawNativeToken(uint256 _amount) external OnlyOwner {
         payable(owner).transfer(_amount);

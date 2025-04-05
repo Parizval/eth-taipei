@@ -9,7 +9,6 @@ abstract contract ChainIdConfiguration {
     // uint256 public constant BASE_MAINNET = 84531;
 
     uint256 public constant FUJI = 43113;
-
 }
 
 contract HelperConfig is Script, ChainIdConfiguration {
@@ -49,7 +48,7 @@ contract HelperConfig is Script, ChainIdConfiguration {
             hyperlaneMailboxAddress: 0x6966b0E55883d49BFB24539356a2f8A673E02039,
             usdcAddress: 0x036CbD53842c5426634e7929541eC2318f3dCF7e,
             tokenMessenger: 0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA,
-            messageTrasmitter : 0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275,
+            messageTrasmitter: 0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275,
             cctpChainId: 43113,
             cctpValue: 1
         });
@@ -60,10 +59,9 @@ contract HelperConfig is Script, ChainIdConfiguration {
             hyperlaneMailboxAddress: 0x6895d3916B94b386fAA6ec9276756e16dAe7480E,
             usdcAddress: 0x5425890298aed601595a70AB815c96711a31Bc65,
             tokenMessenger: 0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA,
-            messageTrasmitter : 0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275,
+            messageTrasmitter: 0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275,
             cctpChainId: 84532,
             cctpValue: 6
         });
     }
-
 }
