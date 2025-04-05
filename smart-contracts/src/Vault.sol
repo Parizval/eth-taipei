@@ -70,6 +70,7 @@ contract Vault is TokenSender, TokenReceiver {
 
     constructor(
         address _owner,
+        address _factoryAddress,
         address _aavePoolAddress,
         address _hyperlaneMailboxAddress,
         address _usdcAddress,
@@ -81,6 +82,8 @@ contract Vault is TokenSender, TokenReceiver {
         uint32 _cctpValue
     ) TokenBase(_wormholeRelayer, _tokenBridge, _wormhole) {
         owner = _owner;
+        factoryAddress = _factoryAddress;
+
         aavePoolAddress = _aavePoolAddress;
         hyperlaneMailboxAddress = _hyperlaneMailboxAddress;
 
