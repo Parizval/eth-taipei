@@ -20,7 +20,7 @@ contract DeployVault is Script {
         vm.startBroadcast();
         Vault vault = new Vault(
             config.owner, // vault owner
-            config.factoryAddress, // _factory
+            config.factoryAddress, // factory
             config.aavePoolAddress, // aavePool
             config.hyperlaneMailboxAddress, // mailbox
             config.usdcAddress, // usdc

@@ -64,7 +64,7 @@ contract HelperConfig is Script, ChainIdConfiguration {
             tokenBridge: 0x86F55A04690fd7815A3D802bD587e83eA888B239,
             wormhole: 0x79A1027a6A159502049F10906D333EC57E95F083,
             
-            cctpChainId: 43113,
+            cctpChainId: 0,
             cctpValue: 1
         });
     }
@@ -80,7 +80,7 @@ contract HelperConfig is Script, ChainIdConfiguration {
             wormholeRelayer: 0xA3cF45939bD6260bcFe3D66bc73d60f19e49a8BB,
             tokenBridge: 0x61E44E506Ca5659E6c0bba9b678586fA2d729756,
             wormhole: 0x7bbcE28e64B3F8b84d876Ab298393c38ad7aac4C,
-            cctpChainId: 84532,
+            cctpChainId: 0,
             cctpValue: 1
         });
     }
