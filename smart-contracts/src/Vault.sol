@@ -299,6 +299,9 @@ contract Vault is TokenSender, TokenReceiver {
 
     }
 
+    function withdrawNativeToken(uint _amount) external OnlyOwner {
+        payable(owner).transfer(_amount);
+    }
 
     function addExternalChainVault(uint32 chainId, address chainAddress) external OnlyOwner {
         chainIdToAddress[chainId] = chainAddress;
