@@ -59,6 +59,20 @@ contract Vault is TokenSender, TokenReceiver {
 
     // Errors 
     error ConditionInvalid(uint sentValue, uint currentValue);
+    error ConditionAmountIsZero();
+   
+    error InvalidOrderId();
+    error InvalidConditionId();
+    error InvalidConidtionId();
+    
+    error SenderNotMailbox();
+    error NotOwner(address sender, address owner);
+
+    error InvalidDestinationChainId();
+    error InvalidSender();
+    error TipAmountIsZero();
+
+   error InsufficientCrossChainDeposit(uint cost, uint balance);
 
     constructor(
         address _owner,
@@ -83,7 +97,9 @@ contract Vault is TokenSender, TokenReceiver {
     }
 
     modifier OnlyOwner() {
-        require(msg.sender == owner, "Only the owner can call this function");
+        if (msg.sender != owner) {
+            revert NotOwner(msg.sender, owner);
+        }
         _;
     }
 
@@ -100,12 +116,17 @@ contract Vault is TokenSender, TokenReceiver {
         uint256 tipAmount
     ) external OnlyOwner returns (bytes32) {
         // Ensure the condition amount is greater than zero
-        require(conditionAmount > 0, "Condition amount must be greater than zero");
+        if (conditionAmount == 0) {
+            revert ConditionAmountIsZero();
+        }
         // Ensure the tip amount is greater than zero
-        require(tipAmount > 0, "Tip amount must be greater than zero");
+        if(tipAmount == 0) {
+            revert TipAmountIsZero();
+        }
         // Ensure the destination chain ID is valid
-        require(chainIdToAddress[destinationChainId] != address(0), "Invalid destination chain ID");
-
+        if (destinationChainId == 0) {
+            revert InvalidDestinationChainId();
+        }
         // Generate a unique order ID
         bytes32 orderId = generateKey(conditionAddress, conditionId, conditionAmount);
 
@@ -124,8 +145,9 @@ contract Vault is TokenSender, TokenReceiver {
 
     function cancelOrder(bytes32 orderId) external OnlyOwner {
         // Ensure the order ID is valid
-        require(orders[orderId].tipAmount > 0, "Invalid order ID");
-
+        if(orders[orderId].tipAmount == 0) {
+            revert InvalidOrderId();
+        }
         // Transfer the tip amount back to the sender
         IERC20(orders[orderId].tipToken).transfer(msg.sender, orders[orderId].tipAmount);
 
@@ -147,8 +169,9 @@ contract Vault is TokenSender, TokenReceiver {
 
     function cancelAssetDeposit(bytes32 orderId) external OnlyOwner {
         // Ensure the order ID is valid
-        require(orderExecutionDetails[orderId].amount > 0, "Invalid order ID");
-
+        if(orderExecutionDetails[orderId].amount == 0) {
+            revert InvalidOrderId();
+        }
         // Transfer the asset amount back to the sender
         IERC20(orderExecutionDetails[orderId].token).transfer(msg.sender, orderExecutionDetails[orderId].amount);
 
@@ -157,13 +180,17 @@ contract Vault is TokenSender, TokenReceiver {
     }
 
     function executeOrder(address conditionAddress, uint16 conditionId, uint256 conditionAmount) external {
-        require(conditionId <= 3, "Invalid condition ID");
-
+        if (conditionAmount >3){
+            revert InvalidConditionId();
+        }
+        
         bytes32 orderId = generateKey(conditionAddress, conditionId, conditionAmount);
         OrderDetails memory order = orders[orderId];
 
         // Ensure the order ID is valid
-        require(order.tipAmount > 0, "Invalid order ID");
+        if(orders[orderId].tipAmount == 0) {
+            revert InvalidOrderId();
+        }
 
         // Call Aave to Check the condition is met
         (uint256 totalCollateralBase, uint256 totalDebtBase,,, uint256 ltv, uint256 healthFactor) =
@@ -228,19 +255,23 @@ contract Vault is TokenSender, TokenReceiver {
 
     function handle(uint32 _origin, bytes32 _sender, bytes calldata _message) external payable {
         // Ensure the function is called by Hyperlane
-        require(msg.sender == hyperlaneMailboxAddress, "Only Hyperlane can call this function");
-
+        if (msg.sender != hyperlaneMailboxAddress) {
+            revert SenderNotMailbox();
+        }
+        
         address originAddress = chainIdToAddress[_origin];
 
         // Check if the message is from valid sender
-        require(_sender == addressToBytes32(originAddress), "Invalid sender");
-
+        if( _sender != addressToBytes32(originAddress)) {
+            revert InvalidSender();
+        }
         // Decode the message to get the order ID
         bytes32 orderId = abi.decode(_message, (bytes32));
 
         OrderExecutionDetails memory orderExecution = orderExecutionDetails[orderId];
-
-        require(orderExecution.amount > 0, "Invalid order ID");
+        if (orderExecution.amount == 0) {
+            revert InvalidOrderId();
+        }
 
         bridgeFunds(orderExecution.token, orderExecution.amount, _origin, originAddress, orderExecution.repay);
     }
@@ -261,13 +292,18 @@ contract Vault is TokenSender, TokenReceiver {
             // Call CCTP to bridge the USDC
 
 
-
+            // Call Factory contract to emit the cross chain transfer event
+            IFactory(factoryAddress).emitCrossChainTransfer(owner, usdcAddress, tokenAmount);
         } else {
             // Call Wormhole to bridge the asset
             uint16 wormholeChainId = IFactory(factoryAddress).getWorldChainId(destinationChain);
 
             uint256 cost = quoteCrossChainDeposit(wormholeChainId);
-            require(address(this).balance >= cost, "Insufficient funds for cross-chain deposit");
+
+            if (address(this).balance < cost) {
+                revert InsufficientCrossChainDeposit(cost, address(this).balance);
+            }
+            
             bytes memory payload = abi.encode(repay);
 
             sendTokenWithPayloadToEvm(wormholeChainId, reciever, payload, 0, GAS_LIMIT, token, tokenAmount);
@@ -297,11 +333,11 @@ contract Vault is TokenSender, TokenReceiver {
         }
     }
 
-    function HandleUsdc( bool repay) external {
+    function HandleUsdc(bool repay) external {
         
 
 
-
+        
     }
 
     function withdrawNativeToken(uint _amount) external OnlyOwner {
