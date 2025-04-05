@@ -8,8 +8,24 @@ contract VaultFactory {
     event CrossChainTransfer(address indexed vaultAddress, address indexed token, uint256 amount);
 
     error InvalidVault();
+    error VaultAlreadyExists(address vaultAddress);
+
 
     address public immutable owner;
+
+    address public immutable aavePool;
+
+    address public immutable mailbox;
+
+    address public immutable usdc;
+    address public immutable tokenMessenger;
+
+    address public immutable wormholeRelayer;
+    address public immutable wormholeTokenBridge;
+    address public immutable wormholeCore;
+
+    uint32 public immutable destinationCCTPChainId;
+    uint32 public immutable destinationCCTPChainValue;
 
     constructor() {
         owner = msg.sender;
@@ -26,11 +42,20 @@ contract VaultFactory {
 
     function createVault() external returns (address) {
         if (vaults[msg.sender] != address(0)) {
-            revert("Vault already exists");
+            revert VaultAlreadyExists(vaults[msg.sender]);
         }
 
         Vault vault = new Vault(
-            msg.sender, msg.sender, msg.sender, msg.sender, msg.sender, msg.sender, msg.sender, msg.sender, 8, 9
+            msg.sender,
+            aavePool,
+            mailbox,
+            usdc,
+            tokenMessenger,
+            wormholeRelayer,
+            wormholeTokenBridge,
+            wormholeCore,
+            destinationCCTPChainId,
+            destinationCCTPChainValue
         );
 
         vaults[msg.sender] = address(vault);
