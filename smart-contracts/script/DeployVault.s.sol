@@ -33,9 +33,6 @@ contract DeployVault is Script {
             config.hyperlaneMailboxAddress, // mailbox
             config.usdcAddress, // usdc
             config.tokenMessenger, // tokenMessenger
-            config.wormholeRelayer, // wormholeRelayer
-            config.tokenBridge, // tokenBridge
-            config.wormhole, // wormholeCore
             config.cctpChainId, // cctpChainId
             config.cctpValue // cctpChainValue
         );
@@ -46,7 +43,7 @@ contract DeployVault is Script {
 
         vaultFactory.setWormholeChainId(11155111, 10002);
         vaultFactory.setWormholeChainId(84532, 10004);
-
+        vaultFactory.setWormholeChainId(43113, 6);
 
         vm.stopBroadcast();
         return (vault, helperconfig);

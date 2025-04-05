@@ -20,9 +20,7 @@ contract VaultScript is Script {
             address(0),
             address(0),
             address(0),
-            address(0),
-            address(0),
-            address(0),
+
             8,
             9
         );
