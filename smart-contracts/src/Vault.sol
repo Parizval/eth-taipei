@@ -57,7 +57,8 @@ contract Vault is TokenSender, TokenReceiver {
 
     error InvalidOrderId();
     error InvalidConditionId();
-    error InvalidConidtionId();
+    error ExecutionNotCreated();
+
 
     error SenderNotMailbox();
     error NotOwner(address sender, address owner);
@@ -220,7 +221,7 @@ contract Vault is TokenSender, TokenReceiver {
     function sameChainOrderExecution(bytes32 orderId) internal {
         OrderExecutionDetails memory orderExecution = orderExecutionDetails[orderId];
         if (orderExecution.amount == 0) {
-            revert InvalidOrderId();
+            revert ExecutionNotCreated();
         }
 
         // Approve call may change based on the asset type
