@@ -13,7 +13,6 @@ abstract contract ChainIdConfiguration {
 
 contract FactoryHelperConfig is Script, ChainIdConfiguration {
     struct NetworkConfig {
-        address owner;
         address aavePoolAddress;
         address hyperlaneMailboxAddress;
         address usdcAddress;
@@ -49,7 +48,6 @@ contract FactoryHelperConfig is Script, ChainIdConfiguration {
 
     function getBaseSepoliaConfig() public pure returns (NetworkConfig memory) {
         return NetworkConfig({
-            owner: 0xA01f6403d49857b58D3794C12E028c3681b24F98,
             aavePoolAddress: 0x1234567890123456789012345678901234567890, // TODO
             hyperlaneMailboxAddress: 0x6966b0E55883d49BFB24539356a2f8A673E02039,
             usdcAddress: 0x1234567890123456789012345678901234567890,
@@ -64,7 +62,6 @@ contract FactoryHelperConfig is Script, ChainIdConfiguration {
 
     function getFujiConfig() public pure returns (NetworkConfig memory) {
         return NetworkConfig({
-            owner: 0xA01f6403d49857b58D3794C12E028c3681b24F98,
             aavePoolAddress: 0x1234567890123456789012345678901234567890, // TODO
             hyperlaneMailboxAddress: 0x5b6CFf85442B851A8e6eaBd2A4E4507B5135B3B0,
             usdcAddress: 0x1234567890123456789012345678901234567890,
