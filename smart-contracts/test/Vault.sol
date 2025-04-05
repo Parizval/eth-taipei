@@ -9,7 +9,7 @@ contract VaultTest is Test {
 
     function setUp() public {
         vault = new Vault(
-            address(0), address(0), address(0), address(0), address(0), address(0), address(0), address(0), 8, 0
+            address(0), address(0), address(0), address(0), address(0), address(0), address(0), address(0), address(0), 8, 0
         );
     }
 }
