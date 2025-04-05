@@ -5,14 +5,11 @@ import {Script, console} from "forge-std/Script.sol";
 import {Vault} from "../src/Vault.sol";
 import {HelperConfig} from "./HelperConfig.s.sol";
 
-
 contract deployVault is Script {
-
     function setUp() public {}
 
     function run() public {
         // Set up the environment
-        
     }
 
     function deployContract() public returns (Vault, HelperConfig) {

@@ -4,7 +4,6 @@ pragma solidity ^0.8.13;
 import {Test, console} from "forge-std/Test.sol";
 import {AaveFetch} from "../src/AaveFetch.sol";
 
-
 contract CounterTest is Test {
     AaveFetch public counter;
 
@@ -21,6 +20,4 @@ contract CounterTest is Test {
         console.log(counter.healthFactor());
         assertEq(counter.ltv(), 7000);
     }
-
-   
 }

@@ -8,7 +8,6 @@ import {AavePool} from "./interfaces/IAavePool.sol";
 import {IHyperlaneMailbox} from "./interfaces/IHyperlane.sol";
 import {IFactory} from "./interfaces/IFactory.sol";
 
-
 // Protocols To Be Integrated
 // 1. Aave (Condition Check done and asset supply/replay should work)
 // 2. Hyperlane (Testing Remaining)
@@ -45,7 +44,6 @@ contract Vault is TokenSender, TokenReceiver {
     uint32 private immutable cctpChainId;
     uint32 private immutable cctpValue;
 
-
     // Mappings
     mapping(uint32 => address) private chainIdToAddress;
 
@@ -55,16 +53,14 @@ contract Vault is TokenSender, TokenReceiver {
 
     // Events
 
-
-
-    // Errors 
-    error ConditionInvalid(uint sentValue, uint currentValue);
+    // Errors
+    error ConditionInvalid(uint256 sentValue, uint256 currentValue);
     error ConditionAmountIsZero();
-   
+
     error InvalidOrderId();
     error InvalidConditionId();
     error InvalidConidtionId();
-    
+
     error SenderNotMailbox();
     error NotOwner(address sender, address owner);
 
@@ -72,7 +68,7 @@ contract Vault is TokenSender, TokenReceiver {
     error InvalidSender();
     error TipAmountIsZero();
 
-   error InsufficientCrossChainDeposit(uint cost, uint balance);
+    error InsufficientCrossChainDeposit(uint256 cost, uint256 balance);
 
     constructor(
         address _owner,
@@ -120,7 +116,7 @@ contract Vault is TokenSender, TokenReceiver {
             revert ConditionAmountIsZero();
         }
         // Ensure the tip amount is greater than zero
-        if(tipAmount == 0) {
+        if (tipAmount == 0) {
             revert TipAmountIsZero();
         }
         // Ensure the destination chain ID is valid
@@ -145,7 +141,7 @@ contract Vault is TokenSender, TokenReceiver {
 
     function cancelOrder(bytes32 orderId) external OnlyOwner {
         // Ensure the order ID is valid
-        if(orders[orderId].tipAmount == 0) {
+        if (orders[orderId].tipAmount == 0) {
             revert InvalidOrderId();
         }
         // Transfer the tip amount back to the sender
@@ -169,7 +165,7 @@ contract Vault is TokenSender, TokenReceiver {
 
     function cancelAssetDeposit(bytes32 orderId) external OnlyOwner {
         // Ensure the order ID is valid
-        if(orderExecutionDetails[orderId].amount == 0) {
+        if (orderExecutionDetails[orderId].amount == 0) {
             revert InvalidOrderId();
         }
         // Transfer the asset amount back to the sender
@@ -180,15 +176,15 @@ contract Vault is TokenSender, TokenReceiver {
     }
 
     function executeOrder(address conditionAddress, uint16 conditionId, uint256 conditionAmount) external {
-        if (conditionAmount >3){
+        if (conditionAmount > 3) {
             revert InvalidConditionId();
         }
-        
+
         bytes32 orderId = generateKey(conditionAddress, conditionId, conditionAmount);
         OrderDetails memory order = orders[orderId];
 
         // Ensure the order ID is valid
-        if(orders[orderId].tipAmount == 0) {
+        if (orders[orderId].tipAmount == 0) {
             revert InvalidOrderId();
         }
 
@@ -250,7 +246,7 @@ contract Vault is TokenSender, TokenReceiver {
 
         uint256 fee = hyperlaneMailbox.quoteDispatch(destinationChainId, recipientAddress, messageBody);
 
-        hyperlaneMailbox.dispatch{value: fee * 2 }(destinationChainId, recipientAddress, messageBody);
+        hyperlaneMailbox.dispatch{value: fee * 2}(destinationChainId, recipientAddress, messageBody);
     }
 
     function handle(uint32 _origin, bytes32 _sender, bytes calldata _message) external payable {
@@ -258,11 +254,11 @@ contract Vault is TokenSender, TokenReceiver {
         if (msg.sender != hyperlaneMailboxAddress) {
             revert SenderNotMailbox();
         }
-        
+
         address originAddress = chainIdToAddress[_origin];
 
         // Check if the message is from valid sender
-        if( _sender != addressToBytes32(originAddress)) {
+        if (_sender != addressToBytes32(originAddress)) {
             revert InvalidSender();
         }
         // Decode the message to get the order ID
@@ -291,7 +287,6 @@ contract Vault is TokenSender, TokenReceiver {
             IERC20(token).approve(tokenMessenger, tokenAmount);
             // Call CCTP to bridge the USDC
 
-
             // Call Factory contract to emit the cross chain transfer event
             IFactory(factoryAddress).emitCrossChainTransfer(owner, usdcAddress, tokenAmount);
         } else {
@@ -303,7 +298,7 @@ contract Vault is TokenSender, TokenReceiver {
             if (address(this).balance < cost) {
                 revert InsufficientCrossChainDeposit(cost, address(this).balance);
             }
-            
+
             bytes memory payload = abi.encode(repay);
 
             sendTokenWithPayloadToEvm(wormholeChainId, reciever, payload, 0, GAS_LIMIT, token, tokenAmount);
@@ -333,14 +328,9 @@ contract Vault is TokenSender, TokenReceiver {
         }
     }
 
-    function HandleUsdc(bool repay) external {
-        
+    function HandleUsdc(bool repay) external {}
 
-
-        
-    }
-
-    function withdrawNativeToken(uint _amount) external OnlyOwner {
+    function withdrawNativeToken(uint256 _amount) external OnlyOwner {
         payable(owner).transfer(_amount);
     }
 

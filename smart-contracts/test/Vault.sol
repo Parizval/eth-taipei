@@ -8,7 +8,8 @@ contract VaultTest is Test {
     Vault public vault;
 
     function setUp() public {
-        vault =
-            new Vault(address(0), address(0), address(0), address(0), address(0), address(0), address(0), address(0), 8, 0);
+        vault = new Vault(
+            address(0), address(0), address(0), address(0), address(0), address(0), address(0), address(0), 8, 0
+        );
     }
 }

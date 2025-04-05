@@ -5,7 +5,7 @@ import {Vault} from "./Vault.sol";
 
 contract VaultFactory {
     event VaultCreated(address indexed vaultAddress, address indexed owner);
-    event CrossChainTransfer(address indexed vaultAddress, address indexed token, uint amount);
+    event CrossChainTransfer(address indexed vaultAddress, address indexed token, uint256 amount);
 
     error InvalidVault();
 
@@ -29,8 +29,9 @@ contract VaultFactory {
             revert("Vault already exists");
         }
 
-        Vault vault =
-            new Vault(msg.sender, msg.sender, msg.sender, msg.sender, msg.sender, msg.sender, msg.sender, msg.sender, 8, 9);
+        Vault vault = new Vault(
+            msg.sender, msg.sender, msg.sender, msg.sender, msg.sender, msg.sender, msg.sender, msg.sender, 8, 9
+        );
 
         vaults[msg.sender] = address(vault);
 
@@ -39,7 +40,7 @@ contract VaultFactory {
         return address(vault);
     }
 
-    function emitCrossChainTransfer(address _owner, address _token, uint _amount) external {
+    function emitCrossChainTransfer(address _owner, address _token, uint256 _amount) external {
         address vault = vaults[_owner];
 
         if (vault != msg.sender) {
@@ -47,9 +48,7 @@ contract VaultFactory {
         }
 
         emit CrossChainTransfer(vault, _token, _amount);
-
     }
-
 
     function setWorldChainId(uint32 _chainId, uint16 _worldChainId) external onlyOwner {
         worldChainId[_chainId] = _worldChainId;
