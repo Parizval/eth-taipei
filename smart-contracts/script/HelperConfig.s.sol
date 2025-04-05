@@ -10,7 +10,6 @@ abstract contract ChainIdConfiguration {
 
     uint256 public constant FUJI = 43113;
 
-    uint256 public constant SEPOLIA = 11155111;
 }
 
 contract HelperConfig is Script, ChainIdConfiguration {
@@ -18,6 +17,7 @@ contract HelperConfig is Script, ChainIdConfiguration {
         address hyperlaneMailboxAddress;
         address usdcAddress;
         address tokenMessenger;
+        address messageTrasmitter;
         uint32 cctpChainId;
         uint32 cctpValue;
     }
@@ -47,30 +47,23 @@ contract HelperConfig is Script, ChainIdConfiguration {
     function getBaseSepoliaConfig() public pure returns (NetworkConfig memory) {
         return NetworkConfig({
             hyperlaneMailboxAddress: 0x6966b0E55883d49BFB24539356a2f8A673E02039,
-            usdcAddress: 0x1234567890123456789012345678901234567890,
-            tokenMessenger: 0x1234567890123456789012345678901234567890,
-            cctpChainId: 0,
+            usdcAddress: 0x036CbD53842c5426634e7929541eC2318f3dCF7e,
+            tokenMessenger: 0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA,
+            messageTrasmitter : 0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275,
+            cctpChainId: 43113,
             cctpValue: 1
         });
     }
 
     function getFujiConfig() public pure returns (NetworkConfig memory) {
         return NetworkConfig({
-            hyperlaneMailboxAddress: 0x5b6CFf85442B851A8e6eaBd2A4E4507B5135B3B0,
-            usdcAddress: 0x1234567890123456789012345678901234567890,
-            tokenMessenger: 0x1234567890123456789012345678901234567890,
-            cctpChainId: 0,
-            cctpValue: 1
+            hyperlaneMailboxAddress: 0x6895d3916B94b386fAA6ec9276756e16dAe7480E,
+            usdcAddress: 0x5425890298aed601595a70AB815c96711a31Bc65,
+            tokenMessenger: 0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA,
+            messageTrasmitter : 0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275,
+            cctpChainId: 84532,
+            cctpValue: 6
         });
     }
 
-    function getSepoliaConfig() public pure returns (NetworkConfig memory) {
-        return NetworkConfig({
-            hyperlaneMailboxAddress: 0xfFAEF09B3cd11D9b20d1a19bECca54EEC2884766,
-            usdcAddress: 0x1234567890123456789012345678901234567890,
-            tokenMessenger: 0x1234567890123456789012345678901234567890,
-            cctpChainId: 0,
-            cctpValue: 1
-        });
-    }
 }

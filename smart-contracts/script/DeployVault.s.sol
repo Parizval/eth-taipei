@@ -33,6 +33,7 @@ contract DeployVault is Script {
             config.hyperlaneMailboxAddress, // mailbox
             config.usdcAddress, // usdc
             config.tokenMessenger, // tokenMessenger
+            config.messageTrasmitter, // messageTrasmitter
             config.cctpChainId, // cctpChainId
             config.cctpValue // cctpChainValue
         );

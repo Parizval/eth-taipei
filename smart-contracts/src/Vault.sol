@@ -42,6 +42,7 @@ contract Vault {
 
     address private immutable usdcAddress;
     address private immutable tokenMessenger;
+    address private immutable messageTransmitter;
     uint32 private immutable cctpChainId;
     uint32 private immutable cctpValue;
 
@@ -76,6 +77,7 @@ contract Vault {
         address _hyperlaneMailboxAddress,
         address _usdcAddress,
         address _tokenMessenger,
+        address _messageTransmitter,
         uint32 _cctpChainId,
         uint32 _cctpValue
     ) {
@@ -87,6 +89,7 @@ contract Vault {
 
         usdcAddress = _usdcAddress;
         tokenMessenger = _tokenMessenger;
+        messageTransmitter = _messageTransmitter;
         cctpChainId = _cctpChainId;
         cctpValue = _cctpValue;
     }
@@ -288,6 +291,9 @@ contract Vault {
             IFactory(factoryAddress).emitCrossChainTransfer(owner, usdcAddress, tokenAmount);
         }
     }
+
+    // function handleUSDC()
+
 
     function withdrawNativeToken(uint256 _amount) external OnlyOwner {
         payable(owner).transfer(_amount);

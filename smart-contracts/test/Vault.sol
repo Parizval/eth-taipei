@@ -27,7 +27,7 @@ contract VaultTest is Test {
         vaultFactory = new VaultFactory();
 
         vault =
-            new Vault(address(1), address(vaultFactory), address(aavePool), address(0), address(0), address(0), 0, 0);
+            new Vault(address(1), address(vaultFactory), address(aavePool), address(0), address(0), address(0), address(0), 0, 0);
 
         usdc = new MockERC20("USDC", "USDC");
 
