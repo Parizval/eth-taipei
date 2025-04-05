@@ -177,7 +177,7 @@ contract Vault is TokenSender, TokenReceiver {
     }
 
     function executeOrder(address conditionAddress, uint16 conditionId, uint256 conditionAmount) external {
-        if (conditionAmount > 3) {
+        if (conditionId > 3) {
             revert InvalidConditionId();
         }
 
@@ -219,6 +219,10 @@ contract Vault is TokenSender, TokenReceiver {
 
     function sameChainOrderExecution(bytes32 orderId) internal {
         OrderExecutionDetails memory orderExecution = orderExecutionDetails[orderId];
+        if (orderExecution.amount == 0) {
+            revert InvalidOrderId();
+        }
+
         // Approve call may change based on the asset type
         IERC20(orderExecution.token).approve(aavePoolAddress, orderExecution.amount);
 
