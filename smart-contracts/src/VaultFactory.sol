@@ -27,8 +27,19 @@ contract VaultFactory {
     uint32 public immutable destinationCCTPChainId;
     uint32 public immutable destinationCCTPChainValue;
 
-    constructor() {
+    constructor(address _aavePool, address _mailbox, address _usdc, address _tokenMessenger, address _wormholeRelayer, address _wormholeTokenBridge, address _wormholeCore, uint32 _destinationCCTPChainId, uint32 _destinationCCTPChainValue) {
         owner = msg.sender;
+
+        aavePool = _aavePool;
+        mailbox = _mailbox;
+        usdc = _usdc;
+        tokenMessenger = _tokenMessenger;
+        wormholeRelayer = _wormholeRelayer;
+        wormholeTokenBridge = _wormholeTokenBridge;
+        wormholeCore = _wormholeCore;
+        destinationCCTPChainId = _destinationCCTPChainId;
+        destinationCCTPChainValue = _destinationCCTPChainValue;
+
     }
 
     modifier onlyOwner() {
