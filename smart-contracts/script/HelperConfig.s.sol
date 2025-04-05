@@ -14,6 +14,7 @@ abstract contract ChainIdConfiguration {
 contract HelperConfig is Script, ChainIdConfiguration {
     struct NetworkConfig {
         address owner;
+        address factoryAddress;
         address aavePoolAddress;
         address hyperlaneMailboxAddress;
         address usdcAddress;
@@ -50,13 +51,19 @@ contract HelperConfig is Script, ChainIdConfiguration {
     function getBaseSepoliaConfig() public pure returns (NetworkConfig memory) {
         return NetworkConfig({
             owner: 0xA01f6403d49857b58D3794C12E028c3681b24F98,
-            aavePoolAddress: 0x1234567890123456789012345678901234567890, // TODO
+            factoryAddress: 0x94354Ba79dac36fF4fD98A29a116734eE4376162,
+
+            aavePoolAddress: 0x39D034F2E2bAB2Ac193A318f745A2F906DFe3C9b, 
+            
             hyperlaneMailboxAddress: 0x6966b0E55883d49BFB24539356a2f8A673E02039,
+            
             usdcAddress: 0x1234567890123456789012345678901234567890,
             tokenMessenger: 0x1234567890123456789012345678901234567890,
+            
             wormholeRelayer: 0x93BAD53DDfB6132b0aC8E37f6029163E63372cEE,
             tokenBridge: 0x86F55A04690fd7815A3D802bD587e83eA888B239,
             wormhole: 0x79A1027a6A159502049F10906D333EC57E95F083,
+            
             cctpChainId: 43113,
             cctpValue: 1
         });
@@ -65,6 +72,7 @@ contract HelperConfig is Script, ChainIdConfiguration {
     function getFujiConfig() public pure returns (NetworkConfig memory) {
         return NetworkConfig({
             owner: 0xA01f6403d49857b58D3794C12E028c3681b24F98,
+            factoryAddress: 0x94354Ba79dac36fF4fD98A29a116734eE4376162,
             aavePoolAddress: 0x1234567890123456789012345678901234567890, // TODO
             hyperlaneMailboxAddress: 0x5b6CFf85442B851A8e6eaBd2A4E4507B5135B3B0,
             usdcAddress: 0x1234567890123456789012345678901234567890,

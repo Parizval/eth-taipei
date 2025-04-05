@@ -10,6 +10,7 @@ contract deployVault is Script {
 
     function run() public {
         // Set up the environment
+        deployContract();
     }
 
     function deployContract() public returns (Vault, HelperConfig) {
@@ -18,16 +19,17 @@ contract deployVault is Script {
 
         vm.startBroadcast();
         Vault vault = new Vault(
-            config.owner, // _vaultToken
-            config.aavePoolAddress, // _rewardToken
-            config.hyperlaneMailboxAddress, // _rewardPool
-            config.usdcAddress, // _rewardPoolV2
-            config.tokenMessenger, // _rewardPoolV3
-            config.wormholeRelayer, // _rewardPoolV4
-            config.tokenBridge, // _rewardPoolV5
-            config.wormhole, // _rewardPoolV6
-            config.cctpChainId, // _cctpChainId
-            config.cctpValue
+            config.owner, // vault owner
+            config.factoryAddress, // _factory
+            config.aavePoolAddress, // aavePool
+            config.hyperlaneMailboxAddress, // mailbox
+            config.usdcAddress, // usdc
+            config.tokenMessenger, // tokenMessenger
+            config.wormholeRelayer, // wormholeRelayer
+            config.tokenBridge, // tokenBridge
+            config.wormhole, // wormholeCore
+            config.cctpChainId, // cctpChainId
+            config.cctpValue // cctpChainValue
         );
 
         vm.stopBroadcast();
