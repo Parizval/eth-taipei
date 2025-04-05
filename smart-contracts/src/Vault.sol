@@ -31,7 +31,6 @@ struct OrderExecutionDetails {
 
 contract Vault is TokenSender, TokenReceiver {
     uint256 constant GAS_LIMIT = 250_000;
-
     // State variables
     address private immutable owner;
     address private immutable factoryAddress;
@@ -59,7 +58,6 @@ contract Vault is TokenSender, TokenReceiver {
     error InvalidOrderId();
     error InvalidConditionId();
     error ExecutionNotCreated();
-
 
     error SenderNotMailbox();
     error NotOwner(address sender, address owner);
@@ -138,6 +136,8 @@ contract Vault is TokenSender, TokenReceiver {
 
         // Transfer the tip amount from the sender to the contract
         IERC20(tipToken).transferFrom(msg.sender, address(this), tipAmount);
+
+        IFactory(factoryAddress).emitOrderCreation(owner, conditionId, conditionAmount);
 
         return orderId;
     }
@@ -250,7 +250,7 @@ contract Vault is TokenSender, TokenReceiver {
 
         uint256 fee = hyperlaneMailbox.quoteDispatch(destinationChainId, recipientAddress, messageBody);
 
-        hyperlaneMailbox.dispatch{value: fee * 5}(destinationChainId, recipientAddress, messageBody);
+        hyperlaneMailbox.dispatch{value: fee * 10}(destinationChainId, recipientAddress, messageBody);
     }
 
     function handle(uint32 _origin, bytes32 _sender, bytes calldata _message) external payable {
@@ -307,8 +307,6 @@ contract Vault is TokenSender, TokenReceiver {
             sendTokenWithPayloadToEvm(wormholeChainId, reciever, payload, 0, GAS_LIMIT, token, tokenAmount);
         }
     }
-
-
 
     function receivePayloadAndTokens(
         bytes memory payload,
