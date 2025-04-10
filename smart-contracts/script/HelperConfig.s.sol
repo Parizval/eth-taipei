@@ -56,7 +56,7 @@ contract HelperConfig is Script, ChainIdConfiguration {
 
     function getFujiConfig() public pure returns (NetworkConfig memory) {
         return NetworkConfig({
-            hyperlaneMailboxAddress: 0x6895d3916B94b386fAA6ec9276756e16dAe7480E,
+            hyperlaneMailboxAddress: 0x5b6CFf85442B851A8e6eaBd2A4E4507B5135B3B0,
             usdcAddress: 0x5425890298aed601595a70AB815c96711a31Bc65,
             tokenMessenger: 0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA,
             messageTrasmitter: 0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275,
